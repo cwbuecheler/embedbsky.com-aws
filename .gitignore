@@ -1,0 +1,19 @@
+node_modules
+
+# environments
+env.dev.json
+env.production.json
+env.staging.json
+env.json
+.env
+.env.local
+.env.development
+.env.production
+.env.staging
+.env.test
+
+# output dir
+dist
+build
+out
+output
