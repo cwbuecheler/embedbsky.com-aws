@@ -4,10 +4,38 @@ frameworkVersion: '3'
 provider:
   name: aws
   runtime: nodejs18.x
+  httpApi:
+    cors: true
 
+# Core Lambda Functions
 functions:
-  function1:
-    handler: index.handler
+  core:
+    environment: ${file(env.${opt:stage, 'dev'}.json)}
+    handler: dist/functions/core/index.handler
+    events:
+      - httpApi:
+          method: GET
+          path: /
+      - httpApi:
+          method: GET
+          path: /lookup/{bskyId}
+    layers:
+      - !Ref SharedLambdaLayer
+    package:
+      individually: true
+      patterns:
+        - '!**'
+        - 'dist/functions/core/**'
 
-plugins:
-  - serverless-plugin-typescript
+layers:
+  shared:
+    name: skyfeed-shared
+    path: dist/layers/shared
+    description: Shared functionality for skyfeed
+    compatibleRuntimes:
+      - nodejs18.x
+    compatibleArchitectures:
+      - x86_64
+    retain: false
+
+configValidationMode: error

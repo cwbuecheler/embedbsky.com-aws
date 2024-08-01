@@ -1,0 +1,6 @@
+{
+	"dependencies": {
+		"@atproto/api": "^0.12.7"
+	},
+	"type": "module"
+}
