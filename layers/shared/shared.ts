@@ -1,3 +1,3 @@
-import { BskyAgent } from '@atproto/api';
+import dayjs from 'dayjs';
 
-export { BskyAgent };
+export { dayjs };

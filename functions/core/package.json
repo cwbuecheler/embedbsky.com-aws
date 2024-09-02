@@ -1,3 +1,10 @@
 {
-	"type": "module"
+	"type": "module",
+	"devDependencies": {
+		"@aws-sdk/client-dynamodb": "^3.637.0",
+		"@aws-sdk/lib-dynamodb": "^3.637.0"
+	},
+	"dependencies": {
+		"@atproto/api": "0.13.5"
+	}
 }

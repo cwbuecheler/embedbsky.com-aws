@@ -1,9 +1,16 @@
 {
 	"devDependencies": {
-		"eslint": "^9.1.1",
+		"@aws-sdk/client-api-gateway": "^3.637.0",
+		"@aws-sdk/client-lambda": "^3.637.0",
+		"@eslint/js": "^9.9.1",
+		"@types/aws-lambda": "^8.10.145",
+		"@types/node": "^20.12.7",
+		"eslint": "^9.9.1",
+		"globals": "^15.9.0",
 		"npm-run-all": "^4.1.5",
 		"prettier": "^3.2.5",
-		"typescript": "^5.4.5"
+		"typescript": "^5.4.5",
+		"typescript-eslint": "^8.3.0"
 	},
 	"scripts": {
 		"build": "tsc",
@@ -11,13 +18,11 @@
 		"cleanup": "rm -rf dist",
 		"deploy": "run-s cleanup build install-modules sls-deploy cleanup",
 		"deploy-prod": "run-s build install-modules sls-deploy-production cleanup",
-		"install-modules": "find dist -type d -not -path '*/node_modules/*' -exec sh -c 'cd {} && NODE_ENV=production npm i' \\;",
+		"install-modules": "bash installmodules.sh",
 		"lint": "eslint -c .eslintrc.json .",
 		"sls-deploy": "sls deploy",
 		"sls-deploy-production": "sls deploy --stage production",
 		"tsc": "tsc --noEmit true"
 	},
-	"dependencies": {
-		"@types/node": "^20.12.7"
-	}
+	"type": "module"
 }

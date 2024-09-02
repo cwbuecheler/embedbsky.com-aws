@@ -6,12 +6,17 @@ provider:
   runtime: nodejs18.x
   httpApi:
     cors: true
+  iam:
+    role:
+      managedPolicies:
+        - 'arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess'
 
 # Core Lambda Functions
 functions:
   core:
     environment: ${file(env.${opt:stage, 'dev'}.json)}
     handler: dist/functions/core/index.handler
+    timeout: 15
     events:
       - httpApi:
           method: GET
@@ -19,6 +24,9 @@ functions:
       - httpApi:
           method: GET
           path: /lookup/{bskyId}
+      - httpApi:
+          method: GET
+          path: /create/{bskyId}
     layers:
       - !Ref SharedLambdaLayer
     package:

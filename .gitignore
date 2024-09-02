@@ -17,3 +17,9 @@ dist
 build
 out
 output
+
+# serverless
+.serverless
+
+# random junk
+.DS_store
