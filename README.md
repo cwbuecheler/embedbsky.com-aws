@@ -6,9 +6,10 @@ Embed your BlueSky feed in any website.
 
 [X] Get returning a feed working
 [X] Get database set up and saving
-[] Create a full HTML string for a user's feed
-[] Store that HTML string in S3 and serve it via CDN
-[] Return the CDN URI to the front-end
+[X] Create a full HTML string for a user's feed
+[X] Store that HTML string in S3 and serve it via CDN
+[X] Return the CDN URI to the front-end
+[] Improve HTML string and catch edge cases
 [] Improve TypeScript defs - hopefully by using AtProto's defs
 [] Write a README that's in any way useful to anyone
 

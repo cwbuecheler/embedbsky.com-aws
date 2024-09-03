@@ -10,6 +10,7 @@ provider:
     role:
       managedPolicies:
         - 'arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess'
+        - 'arn:aws:iam::aws:policy/AmazonS3FullAccess'
 
 # Core Lambda Functions
 functions:

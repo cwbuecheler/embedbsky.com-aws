@@ -1,20 +1,24 @@
 // AWS & Shared Layer
 import { dayjs } from '/opt/shared.js';
 
+// Local modules
+import { likeSVG, replySVG, repostSVG, userAvatarSVG } from './svg';
+
 // TS Types
 import { GenerateFeedHTMLResp } from 'types/data';
 
-const createPostBox = (post: any, hasQuotePost: boolean) => {
+const createPostBox = (post: any, hasQuotePost: boolean, isRepost: boolean) => {
 	// Sanity check - no post? Return an empty string
 	if (!post) {
 		return '';
 	}
 
-	// Extract the stuff we need to display from the feed obj
-	const avatar = post.author?.avatar || '';
+	// Extract the stuff we need to display from the post obj
+	const avatar = post.author?.avatar || null;
 	const numLikes = post.likeCount || null;
 	const numReplies = post.replyCount || null;
 	const numReposts = post.repostCount || null;
+	const repostHandle = post.reason?.by?.handle || '';
 	const textCopy = post.record?.text || '';
 	const userDisplayName = post.author?.displayName || 'unknown';
 	const userHandle = post.author?.handle || 'unknown';
@@ -25,8 +29,9 @@ const createPostBox = (post: any, hasQuotePost: boolean) => {
 	// Put together a blob of HTML for the post
 	return `<div class="embedbsky">
 	<div class="postbox">
+		${isRepost ? `<div class="repostheader">${repostSVG}reposted by ${repostHandle}</div>` : ''}
 		<div class="col avatar">
-			<div class="avatar-img"><img src="${avatar}" alt="" /></div>
+			<div class="avatar-img">${avatar ? `<img src="${avatar}" alt="" /></div>` : userAvatarSVG}</div>
 		</div>
 		<div class="col text">
 			<div class="textdata">
@@ -35,10 +40,9 @@ const createPostBox = (post: any, hasQuotePost: boolean) => {
 			<div class="textcopy">${textCopy}</div>
 			${hasQuotePost ? createQuotePost(post.embed?.record) : ''}
 			<div class="icons">
-				<div class="reply"><svg /><span class="num">${numReplies}</span></div>
-				<div class="reposts"><svg /><span class="num">${numReposts}</span></div>
-				<div class="likes"><svg /><span class="num">${numLikes}</span></div>
-				<div class="view"><svg /><span class="label">view on bsky</span></div>
+				<div class="reply">${replySVG}<span class="num">${numReplies}</span></div>
+				<div class="reposts">${repostSVG}<span class="num">${numReposts}</span></div>
+				<div class="likes">${likeSVG}<span class="num">${numLikes}</span></div>
 			</div>
 		</div>
 	</div>
@@ -64,7 +68,7 @@ const createQuotePost = (record: any) => {
 	<div class="postbox quote">
 		<div class="col text">
 			<div class="textdata">
-				<span class="avatar"><img src="${avatar}" alt="" /></span>
+				<span class="avatar">${avatar ? `<img src="${avatar}" alt="" /></div>` : userAvatarSVG}</span>
 				<strong>${userDisplayName}</strong> ${userHandle} · <span class="timeago">${time}</span>
 			</div>
 			<div class="textCopy">${textCopy}</div>
@@ -77,9 +81,13 @@ const generateFeedHtml = (feedData: any): GenerateFeedHTMLResp => {
 	const { feed } = feedData;
 	let feedHtml = '';
 
-	for (const post of feed) {
+	for (const feedItem of feed) {
+		// Get post and reason objects
+		const { post, reason } = feedItem;
 		const hasQuotePost = post.embed && post.embed.record ? true : false;
-		feedHtml += createPostBox(post, hasQuotePost);
+		const isRepost = reason ? true : false;
+
+		feedHtml += createPostBox(post, hasQuotePost, isRepost);
 	}
 	return {
 		generatedFeedHTML: feedHtml,

@@ -42,7 +42,7 @@ const getCreateBksyId = async (
 
 	const { data: feedData } = await bskyAgent.getAuthorFeed({
 		actor: bskyId,
-		filter: 'posts_and_author_threads',
+		filter: 'posts_no_replies',
 		limit: 30,
 	});
 
@@ -58,7 +58,7 @@ const getCreateBksyId = async (
 
 	// Save it to the CDN
 	const { generatedFeedHTML } = generateFeedHTMLResp;
-	const cdnResp = await saveToCDN(generatedFeedHTML);
+	const cdnResp = await saveToCDN(bskyId, generatedFeedHTML);
 
 	// Add the bskyId and time updated to the DB
 	const now = dayjs().toISOString();
