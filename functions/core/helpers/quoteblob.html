@@ -1,12 +1,10 @@
 <!-- This is just reference since it's hard to read in generatefeedhtml.ts -->
-<div class="embedbsky">
-	<div class="postbox quote">
-		<div class="col text">
-			<div class="textdata">
-				<span class="avatar">${avatar ? `<img src="${avatar}" alt="" />` : userAvatarSVG}</span>
-				<strong>${userDisplayName}</strong> ${userHandle} · <span class="timeago">${time}</span>
-			</div>
-			<div class="textCopy">${textCopy}</div>
+<div class="quotebox">
+	<div class="text">
+		<div class="header">
+			<span class="avatar">${avatar ? `<img src="${avatar}" alt="" />` : userAvatarSVG}</span>
+			<strong>${userDisplayName}</strong> <span class="handle">${userHandle}</span> &sdot; <span class="timeago">${time}</span>
 		</div>
+		<div class="textcopy">${textCopy}</div>
 	</div>
 </div>

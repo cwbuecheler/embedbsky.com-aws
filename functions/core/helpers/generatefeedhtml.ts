@@ -16,19 +16,22 @@ const createPostBox = (post: any, hasQuotePost: boolean, isRepost: boolean, reas
 
 	// Extract the stuff we need to display from the post obj
 	const avatar = post.author?.avatar || null;
-	const numLikes = post.likeCount || null;
-	const numReplies = post.replyCount || null;
-	const numReposts = post.repostCount || null;
-	const repostDisplayName = reason?.by?.displayName || '';
+	const numLikes = post.likeCount > 0 ? post.likeCount.toString() : '';
+	const numReplies = post.replyCount > 0 ? post.replyCount.toString() : '';
+	const numReposts = post.repostCount > 0 ? post.repostCount.toString() : '';
 	const rawText = post.record?.text || '';
+	const repostDisplayName = reason?.by?.displayName || '';
+	const repostHandle = reason?.by?.handle || '';
+	const repostLink = isRepost ? `https://bsky.app/profile/${repostHandle}/` : '';
 	const textCopy = rawText.replace('\n', '<br /><br />');
-
 	const userDisplayName = post.author?.displayName || 'unknown';
 	const userHandle = post.author?.handle || 'unknown';
+	const userLink = `https://bsky.app/profile/${userHandle}/`;
 	const time = post.record?.createdAt ? dayjs().to(dayjs(post.record.createdAt)) : 'unknown';
 
 	// Put together a blob of HTML for the post
-	return `<div class="embedbsky">${isRepost ? `<div class="repostheader">${repostSVG}reposted by ${repostDisplayName}</div>` : ''}<div class="postbox"><div class="col avatar"><div class="avatar-img">${avatar ? `<img src="${avatar}" alt="" />` : userAvatarSVG}</div></div><div class="col text"><div class="textdata"><strong>${userDisplayName}</strong> ${userHandle} &sdot; <span class="timeago">${time}</span></div><div class="textcopy">${textCopy}</div>${hasQuotePost ? createQuotePost(post.embed?.record) : ''}<div class="icons"><div class="reply">${replySVG}<span class="num">${numReplies}</span></div><div class="reposts">${repostSVG}<span class="num">${numReposts}</span></div><div class="likes">${likeSVG}<span class="num">${numLikes}</span></div></div></div></div></div>`;
+	// TODO - timestamp links should go to the specific post, not the user page
+	return `<div class="embedbsky">${isRepost ? `<div class="repostheader"><a href="${repostLink}" target="_blank">${repostSVG}reposted by ${repostDisplayName}</a></div>` : ''}<div class="postbox"><div class="col avatar"><div class="avatar-img"><a href="${userLink}" target="_blank">${avatar ? `<img src="${avatar}" alt="" />` : userAvatarSVG}</a></div></div><div class="col text"><div class="textdata"><strong><a href="${userLink}" target="_blank">${userDisplayName}</a></strong> <span class="handle"><a href="${userLink}" target="_blank">${userHandle}</a></span> &sdot; <span class="timeago"><a href="${userLink}" target="_blank">${time}</a></span></div><div class="textcopy">${textCopy}</div>${hasQuotePost ? createQuotePost(post.embed?.record) : ''}<div class="icons"><div class="replies">${replySVG}<span class="num">${numReplies}</span></div><div class="reposts">${repostSVG}<span class="num">${numReposts}</span></div><div class="likes">${likeSVG}<span class="num">${numLikes}</span></div><div class="empty">&nbsp;</div></div></div></div></div>`;
 };
 
 const createQuotePost = (record: any) => {
@@ -45,7 +48,7 @@ const createQuotePost = (record: any) => {
 	const time = record.value?.createdAt ? dayjs().to(dayjs(record.createdAt)) : 'unknown';
 
 	// Create that HTML blob!
-	return `<div class="embedbsky"><div class="postbox quote"><div class="col text"><div class="textdata"><span class="avatar">${avatar ? `<img src="${avatar}" alt="" />` : userAvatarSVG}</span><strong>${userDisplayName}</strong> ${userHandle} · <span class="timeago">${time}</span></div><div class="textCopy">${textCopy}</div></div></div></div>`;
+	return `<div class="quotebox"><div class="text"><div class="header"><span class="avatar">${avatar ? `<img src="${avatar}" alt="" />` : userAvatarSVG}</span><strong>${userDisplayName}</strong> <span class="handle">${userHandle}</span> &sdot; <span class="timeago">${time}</span></div><div class="textcopy">${textCopy}</div></div></div>`;
 };
 
 const generateFeedHtml = (feedData: any): GenerateFeedHTMLResp => {

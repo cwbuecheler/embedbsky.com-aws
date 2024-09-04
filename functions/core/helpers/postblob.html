@@ -1,13 +1,19 @@
 <!-- This is just reference since it's hard to read in generatefeedhtml.ts -->
 <div class="embedbsky">
-	${isRepost ? `<div class="repostheader">${repostSVG}reposted by ${repostDisplayName}</div>` : ''}
+	${isRepost ? `<div class="repostheader">
+		<a href="${repostLink}">${repostSVG}reposted by ${repostDisplayName}</a>
+	</div>` : ''}
 	<div class="postbox">
 		<div class="col avatar">
-			<div class="avatar-img">${avatar ? `<img src="${avatar}" alt="" />` : userAvatarSVG}</div>
+			<div class="avatar-img">
+				<a href="${userLink}" target="_blank">${avatar ? `<img src="${avatar}" alt="" />` : userAvatarSVG}</a>
+			</div>
 		</div>
 		<div class="col text">
 			<div class="textdata">
-				<strong>${userDisplayName}</strong> ${userHandle} &sdot; <span class="timeago">${time}</span>
+				<strong><a href="${userLink}" target="_blank">${userDisplayName}</a></strong>
+				<span class="handle"><a href="${userLink}" target="_blank">${userHandle}</a></span> &sdot;
+				<span class="timeago"><a href="${userLink}" target="_blank">${time}</a></span>
 			</div>
 			<div class="textcopy">${textCopy}</div>
 			${hasQuotePost ? createQuotePost(post.embed?.record) : ''}
@@ -15,6 +21,7 @@
 				<div class="reply">${replySVG}<span class="num">${numReplies}</span></div>
 				<div class="reposts">${repostSVG}<span class="num">${numReposts}</span></div>
 				<div class="likes">${likeSVG}<span class="num">${numLikes}</span></div>
+				<div class="empty">&nbsp;</div>
 			</div>
 		</div>
 	</div>
