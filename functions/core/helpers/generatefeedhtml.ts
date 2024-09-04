@@ -25,9 +25,7 @@ const createPostBox = (post: any, hasQuotePost: boolean, isRepost: boolean, reas
 
 	const userDisplayName = post.author?.displayName || 'unknown';
 	const userHandle = post.author?.handle || 'unknown';
-	const time = post.record?.createdAt
-		? dayjs(post.record.createdAt).format('MM/DD/YYYY hh:mm')
-		: 'unknown';
+	const time = post.record?.createdAt ? dayjs().to(dayjs(post.record.createdAt)) : 'unknown';
 
 	// Put together a blob of HTML for the post
 	return `<div class="embedbsky">${isRepost ? `<div class="repostheader">${repostSVG}reposted by ${repostDisplayName}</div>` : ''}<div class="postbox"><div class="col avatar"><div class="avatar-img">${avatar ? `<img src="${avatar}" alt="" />` : userAvatarSVG}</div></div><div class="col text"><div class="textdata"><strong>${userDisplayName}</strong> ${userHandle} &sdot; <span class="timeago">${time}</span></div><div class="textcopy">${textCopy}</div>${hasQuotePost ? createQuotePost(post.embed?.record) : ''}<div class="icons"><div class="reply">${replySVG}<span class="num">${numReplies}</span></div><div class="reposts">${repostSVG}<span class="num">${numReposts}</span></div><div class="likes">${likeSVG}<span class="num">${numLikes}</span></div></div></div></div></div>`;
@@ -44,9 +42,7 @@ const createQuotePost = (record: any) => {
 	const userDisplayName = record.author?.displayName || 'unknown';
 	const userHandle = record.author?.handle || 'unknown';
 	const textCopy = record.value?.text || '';
-	const time = record.value?.createdAt
-		? dayjs(record.createdAt).format('MM/DD/YYYY hh:mm')
-		: 'unknown';
+	const time = record.value?.createdAt ? dayjs().to(dayjs(record.createdAt)) : 'unknown';
 
 	// Create that HTML blob!
 	return `<div class="embedbsky"><div class="postbox quote"><div class="col text"><div class="textdata"><span class="avatar">${avatar ? `<img src="${avatar}" alt="" />` : userAvatarSVG}</span><strong>${userDisplayName}</strong> ${userHandle} · <span class="timeago">${time}</span></div><div class="textCopy">${textCopy}</div></div></div></div>`;

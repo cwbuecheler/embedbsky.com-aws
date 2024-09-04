@@ -1,5 +1,7 @@
-// AWS & Shared Layer
+// 3rd Party
 import { AtpAgent } from '@atproto/api';
+
+// AWS & Shared Layer
 import { DynamoDBDocument } from '@aws-sdk/lib-dynamodb';
 import { dayjs } from '/opt/shared.js';
 
