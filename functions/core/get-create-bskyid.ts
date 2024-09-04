@@ -59,6 +59,9 @@ const getCreateBksyId = async (
 	// Save it to the CDN
 	const { generatedFeedHTML } = generateFeedHTMLResp;
 	const cdnResp = await saveToCDN(bskyId, generatedFeedHTML);
+	if (!cdnResp.success) {
+		throw new Error(`Couldn't save feed data to CDN`);
+	}
 
 	// Add the bskyId and time updated to the DB
 	const now = dayjs().toISOString();
@@ -75,13 +78,10 @@ const getCreateBksyId = async (
 	}
 
 	// return the feed URL
-	if (cdnResp.success) {
-		respData = {
-			savedFeedURI: cdnResp.savedFeedURI,
-		};
-	} else {
-		throw new Error(`Couldn't save feed data to CDN`);
-	}
+	respData = {
+		feedData,
+		savedFeedURI: cdnResp.savedFeedURI,
+	};
 
 	return respData;
 };

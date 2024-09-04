@@ -14,13 +14,15 @@ const saveToCDN = async (bskyId: string, html: string): Promise<CDNResp> => {
 		Bucket: bucket,
 		Key: `feeds/${bskyId}.html`,
 		Body: html,
-		ContentType: 'text/html; charset=utf-8',
+		ContentType: 'text/html',
 	};
 
 	try {
 		const data = await s3Client.send(new PutObjectCommand(params));
 		if (data) {
-			savedFeedURI = `https://embedbsky.com/feeds/${bskyId}.html`;
+			savedFeedURI = `http://embedbsky.com.s3-website-us-east-1.amazonaws.com/feeds/${bskyId}.html`;
+			// change when we get cloudfront working properly
+			// savedFeedURI = `https://embedbsky.com/feeds/${bskyId}.html`;
 		}
 	} catch (err: any) {
 		console.error(err);
