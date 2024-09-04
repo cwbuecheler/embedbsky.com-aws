@@ -1,7 +1,5 @@
-// 3rd party
-import AtpAgent from '@atproto/api';
-
 // AWS & Shared Layer
+import { AtpAgent } from '@atproto/api';
 import { DynamoDBDocument } from '@aws-sdk/lib-dynamodb';
 import { dayjs } from '/opt/shared.js';
 
@@ -40,7 +38,7 @@ const getCreateBksyId = async (
 	}
 	*/
 
-	const { data: feedData } = await bskyAgent.getAuthorFeed({
+	const { data: feedData } = await bskyAgent.app.bsky.feed.getAuthorFeed({
 		actor: bskyId,
 		filter: 'posts_no_replies',
 		limit: 30,

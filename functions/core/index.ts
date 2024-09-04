@@ -1,4 +1,4 @@
-// 3rd party
+// 3rd Party Modules
 import { AtpAgent } from '@atproto/api';
 
 // AWS and Shared Layer
@@ -35,14 +35,9 @@ const handler: Handler = async (event) => {
 			try {
 				const { bskyId } = pathParams;
 
-				// Connect to bsky - TODO: Move this to oauth or at least not my personal account
-				const bskyAgent = new AtpAgent({ service: 'https://bsky.social' });
-				await bskyAgent.login({
-					identifier: 'cwbuecheler.bsky.social',
-					password: process.env.BSKY_PASS || '',
-				});
-
-				const { data: feedData } = await bskyAgent.getAuthorFeed({
+				// No auth needed for this endpoint
+				const bskyAgent = new AtpAgent({ service: 'https://api.bsky.app' });
+				const { data: feedData } = await bskyAgent.app.bsky.feed.getAuthorFeed({
 					actor: bskyId,
 					filter: 'posts_and_author_threads',
 					limit: 30,
@@ -61,13 +56,7 @@ const handler: Handler = async (event) => {
 			const { bskyId } = pathParams;
 
 			try {
-				// Connect to bsky - TODO: Move this to oauth or at least not my personal account
-				const bskyAgent = new AtpAgent({ service: 'https://bsky.social' });
-				await bskyAgent.login({
-					identifier: 'cwbuecheler.bsky.social',
-					password: process.env.BSKY_PASS || '',
-				});
-
+				const bskyAgent = new AtpAgent({ service: 'https://api.bsky.app' });
 				respData = await getCreateBksyId(bskyId, respData, ddbClient, bskyAgent);
 			} catch (err: any) {
 				errorMessages.push(err.message);
