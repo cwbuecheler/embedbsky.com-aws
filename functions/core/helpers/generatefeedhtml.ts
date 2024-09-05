@@ -31,9 +31,16 @@ const createImageHtml = (images: BskyImage[], postUrl: string): string => {
 	return imagesHtml;
 };
 
+const createLinkCard = (linkInfo: any) => {
+	const { description, thumb, title, uri } = linkInfo;
+	const domain = new URL(uri).hostname;
+	return `<div class="linkcard"><a href="${uri}" target="_blank"><div class="image"><img src="${thumb}" alt="header image - ${title}" /></div><div class="site">${domain}</div><div class="text"><strong>${title}</strong><br />${description}</div></a></div>`;
+};
+
 const createPostBox = (
 	post: any,
 	hasQuotePost: boolean,
+	hasLinkCard: boolean,
 	isRepost: boolean,
 	reason: any,
 ): string => {
@@ -77,6 +84,7 @@ const createPostBox = (
 					</div>
 					<div class="textcopy">${textCopy}</div>
 					${hasQuotePost ? createQuotePost(post.embed?.record) : ''}
+					${hasLinkCard ? createLinkCard(post.embed?.external) : ''}
 					${numImages > 0 ? createImageHtml(images, postUrl) : ''}
 					<div class="icons">
 						<div class="replies">${replySVG}<span class="num">${numReplies}</span></div>
@@ -95,12 +103,28 @@ const createQuotePost = (record: any) => {
 		return '';
 	}
 
+	// Handle self-quotes, which have an extra "record" level;
+	if (record.record) {
+		record = record.record;
+	}
+
 	// Extract the stuff we need to create a quote post
+	let embedWithImages: any = undefined;
+	if (record.embeds) {
+		record.embeds.forEach((embed: any) => {
+			if (embed.images?.length > 0) {
+				embedWithImages = embed;
+			}
+		});
+	}
 	const avatar = record.author?.avatar || '';
-	const userDisplayName = record.author?.displayName || 'unknown';
-	const userHandle = record.author?.handle || 'unknown';
+	const images: BskyImage[] = embedWithImages?.images || [];
+	const numImages: number = embedWithImages?.images?.length || 0;
+	const postUrl: string = getPostUrl(record);
 	const textCopy = record.value?.text || '';
 	const time = record.value?.createdAt ? dayjs().to(dayjs(record.value.createdAt)) : 'unknown';
+	const userDisplayName = record.author?.displayName || 'unknown';
+	const userHandle = record.author?.handle || 'unknown';
 
 	// Create that HTML blob!
 	return `
@@ -115,6 +139,7 @@ const createQuotePost = (record: any) => {
 					</span>
 				</div>
 				<div class="textcopy">${textCopy}</div>
+				${numImages > 0 ? createImageHtml(images, postUrl) : ''}
 			</div>
 		</div>`;
 };
@@ -139,9 +164,10 @@ const generateFeedHtml = (feedData: any): GenerateFeedHTMLResp => {
 		// Get post and reason objects
 		const { post, reason } = feedItem;
 		const hasQuotePost = post.embed && post.embed.record ? true : false;
+		const hasLinkCard = post.embed && post.embed.external ? true : false;
 		const isRepost = reason ? true : false;
 
-		feedHtml += createPostBox(post, hasQuotePost, isRepost, reason);
+		feedHtml += createPostBox(post, hasQuotePost, hasLinkCard, isRepost, reason);
 	}
 	return {
 		generatedFeedHTML: feedHtml,
