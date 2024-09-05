@@ -20,68 +20,73 @@ const getCreateBksyId = async (
 	ddbClient: DynamoDBDocument,
 	bskyAgent: AtpAgent,
 ): Promise<RespData> => {
-	/*
-	.
-	Uncomment when done testing!
-	.
-	.
-	// Sanity check - does the timeline already exist in the DB?
-	const lookupResp = await ddbClient.get({
-		TableName: bksyUserTable,
-		Key: {
-			bskyId,
-		},
-	});
+	try {
+		/*
+		.
+		Uncomment when done testing!
+		.
+		.
+		// Sanity check - does the timeline already exist in the DB?
+		const lookupResp = await ddbClient.get({
+			TableName: bksyUserTable,
+			Key: {
+				bskyId,
+			},
+		});
 
-	if (lookupResp.Item) {
-		// Just return the feed URL to the CDN
-		respData = { feedUri: `${CDN_URI}/${bskyId}` };
-		return respData;
+		if (lookupResp.Item) {
+			// Just return the feed URL to the CDN
+			respData = { feedUri: `${CDN_URI}/${bskyId}` };
+			return respData;
+		}
+		*/
+
+		const { data: feedData } = await bskyAgent.app.bsky.feed.getAuthorFeed({
+			actor: bskyId,
+			filter: 'posts_no_replies',
+			limit: 30,
+		});
+
+		if (!feedData) {
+			throw new Error(`Couldn't get feed data from BlueSky`);
+		}
+
+		// Generate feed flat file
+		const generateFeedHTMLResp = await generateFeedHtml(feedData);
+		if (!generateFeedHTMLResp.success) {
+			throw new Error(`Couldn't generate feed HTML`);
+		}
+
+		// Save it to the CDN
+		const { generatedFeedHTML } = generateFeedHTMLResp;
+		const cdnResp = await saveToCDN(bskyId, generatedFeedHTML);
+		if (!cdnResp.success) {
+			throw new Error(`Couldn't save feed data to CDN`);
+		}
+
+		// Add the bskyId and time updated to the DB
+		const now = dayjs().toISOString();
+		const putResp = await ddbClient.put({
+			TableName: bksyUserTable,
+			Item: {
+				bskyId,
+				lastUpdated: now,
+			},
+		});
+
+		if (!putResp) {
+			throw new Error(`Couldn't put bsky user data to DDB`);
+		}
+
+		// return the feed URL
+		respData = {
+			feedData,
+			savedFeedURI: cdnResp.savedFeedURI,
+		};
+	} catch (e: any) {
+		console.error(e.message);
+		throw new Error(`Couldn't create BlueSky feed`);
 	}
-	*/
-
-	const { data: feedData } = await bskyAgent.app.bsky.feed.getAuthorFeed({
-		actor: bskyId,
-		filter: 'posts_no_replies',
-		limit: 30,
-	});
-
-	if (!feedData) {
-		throw new Error(`Couldn't get feed data from BlueSky`);
-	}
-
-	// Generate feed flat file
-	const generateFeedHTMLResp = await generateFeedHtml(feedData);
-	if (!generateFeedHTMLResp.success) {
-		throw new Error(`Couldn't generate feed HTML`);
-	}
-
-	// Save it to the CDN
-	const { generatedFeedHTML } = generateFeedHTMLResp;
-	const cdnResp = await saveToCDN(bskyId, generatedFeedHTML);
-	if (!cdnResp.success) {
-		throw new Error(`Couldn't save feed data to CDN`);
-	}
-
-	// Add the bskyId and time updated to the DB
-	const now = dayjs().toISOString();
-	const putResp = await ddbClient.put({
-		TableName: bksyUserTable,
-		Item: {
-			bskyId,
-			lastUpdated: now,
-		},
-	});
-
-	if (!putResp) {
-		throw new Error(`Couldn't put bsky user data to DDB`);
-	}
-
-	// return the feed URL
-	respData = {
-		feedData,
-		savedFeedURI: cdnResp.savedFeedURI,
-	};
 
 	return respData;
 };
