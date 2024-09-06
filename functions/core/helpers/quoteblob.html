@@ -2,9 +2,15 @@
 <div class="quotebox">
 	<div class="text">
 		<div class="header">
-			<span class="avatar">${avatar ? `<img src="${avatar}" alt="" />` : userAvatarSVG}</span>
-			<strong>${userDisplayName}</strong> <span class="handle">${userHandle}</span> &sdot; <span class="timeago">${time}</span>
+			<span class="avatar">${avatar ? `<img src="${avatar}" alt="${userHandle}'s user avatar" />` :
+				userAvatarSVG}</span>
+			<span class="othertext">
+				<strong>${userDisplayName}</strong>
+				<span class="handle">${userHandle}</span> &sdot;
+				<span class="timeago">${time}</span>
+			</span>
 		</div>
 		<div class="textcopy">${textCopy}</div>
+		${numImages > 0 ? createImageHtml(images, postUrl) : ''}
 	</div>
 </div>

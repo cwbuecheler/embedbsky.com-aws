@@ -1,3 +1,6 @@
+// 3rd party
+import { RichText } from '@atproto/api';
+
 // AWS & Shared Layer
 import { dayjs } from '/opt/shared.js';
 
@@ -49,6 +52,13 @@ const createPostBox = (
 		return '';
 	}
 
+	// Handle rich text
+	const hasFacets = post.record?.facets?.length > 0 ? true : false;
+	let textCopy: string = post.record?.text || '';
+	if (hasFacets) {
+		textCopy = createRichText(textCopy, post.record.facets);
+	}
+
 	// Extract the stuff we need to display from the post obj
 	const avatar: string = post.author?.avatar || null;
 	const images: BskyImage[] = post.embed?.images || [];
@@ -57,7 +67,6 @@ const createPostBox = (
 	const numReplies: string = post.replyCount > 0 ? post.replyCount.toString() : '';
 	const numReposts: string = post.repostCount > 0 ? post.repostCount.toString() : '';
 	const postUrl: string = getPostUrl(post);
-	const textCopy: string = post.record?.text || '';
 	const repostDisplayName: string = reason?.by?.displayName || '';
 	const repostHandle: string = reason?.by?.handle || '';
 	const repostLink: string = isRepost ? `https://bsky.app/profile/${repostHandle}/` : '';
@@ -69,32 +78,7 @@ const createPostBox = (
 	const userLink: string = `https://bsky.app/profile/${userHandle}/`;
 
 	// Put together a blob of HTML for the post
-	return `
-		<div class="postcontainer">
-			${isRepost ? `<div class="repostheader"><a href="${repostLink}" target="_blank">${repostSVG}reposted by ${repostDisplayName}</a></div>` : ''}
-			<div class="postbox">
-				<div class="col avatar">
-					<div class="avatar-img"><a href="${userLink}" target="_blank">${avatar ? `<img src="${avatar}" alt="${userHandle}'s user avatar" />` : userAvatarSVG}</a></div>
-				</div>
-				<div class="col text">
-					<div class="textdata">
-						<strong><a href="${userLink}" target="_blank">${userDisplayName}</a></strong>
-						<span class="handle"><a href="${userLink}" target="_blank">${userHandle}</a></span> &sdot;
-						<span class="timeago"><a href="${postUrl}" target="_blank">${time}</a></span>
-					</div>
-					<div class="textcopy">${textCopy}</div>
-					${hasQuotePost ? createQuotePost(post.embed?.record) : ''}
-					${hasLinkCard ? createLinkCard(post.embed?.external) : ''}
-					${numImages > 0 ? createImageHtml(images, postUrl) : ''}
-					<div class="icons">
-						<div class="replies">${replySVG}<span class="num">${numReplies}</span></div>
-						<div class="reposts">${repostSVG}<span class="num">${numReposts}</span></div>
-						<div class="likes">${likeSVG}<span class="num">${numLikes}</span></div>
-						<div class="empty">&nbsp;</div>
-					</div>
-				</div>
-			</div>
-		</div>`;
+	return `<div class="postcontainer">${isRepost ? `<div class="repostheader"><a href="${repostLink}" target="_blank">${repostSVG}reposted by ${repostDisplayName}</a></div>` : ''}<div class="postbox"><div class="col avatar"><div class="avatar-img"><a href="${userLink}" target="_blank">${avatar ? `<img src="${avatar}" alt="${userHandle}'s user avatar" />` : userAvatarSVG}</a></div></div><div class="col text"><div class="textdata"><strong><a href="${userLink}" target="_blank">${userDisplayName}</a></strong><span class="handle"><a href="${userLink}" target="_blank">${userHandle}</a></span> &sdot; <span class="timeago"><a href="${postUrl}" target="_blank">${time}</a></span></div><div class="textcopy">${textCopy}</div>${hasQuotePost ? createQuotePost(post.embed?.record) : ''}${hasLinkCard ? createLinkCard(post.embed?.external) : ''}${numImages > 0 ? createImageHtml(images, postUrl) : ''}<div class="icons"><div class="replies">${replySVG}<span class="num">${numReplies}</span></div><div class="reposts">${repostSVG}<span class="num">${numReposts}</span></div><div class="likes">${likeSVG}<span class="num">${numLikes}</span></div><div class="empty">&nbsp;</div></div></div></div></div>`;
 };
 
 const createQuotePost = (record: any) => {
@@ -106,6 +90,13 @@ const createQuotePost = (record: any) => {
 	// Handle self-quotes, which have an extra "record" level;
 	if (record.record) {
 		record = record.record;
+	}
+
+	// Handle rich text
+	const hasFacets = record?.facets?.length > 0 ? true : false;
+	let textCopy: string = record?.text || '';
+	if (hasFacets) {
+		textCopy = createRichText(textCopy, record.facets);
 	}
 
 	// Extract the stuff we need to create a quote post
@@ -121,27 +112,31 @@ const createQuotePost = (record: any) => {
 	const images: BskyImage[] = embedWithImages?.images || [];
 	const numImages: number = embedWithImages?.images?.length || 0;
 	const postUrl: string = getPostUrl(record);
-	const textCopy = record.value?.text || '';
 	const time = record.value?.createdAt ? dayjs().to(dayjs(record.value.createdAt)) : 'unknown';
 	const userDisplayName = record.author?.displayName || 'unknown';
 	const userHandle = record.author?.handle || 'unknown';
 
 	// Create that HTML blob!
-	return `
-		<div class="quotebox">
-			<div class="text">
-				<div class="header">
-					<span class="avatar">${avatar ? `<img src="${avatar}" alt="${userHandle}'s user avatar" />` : userAvatarSVG}</span>
-					<span class="othertext">
-						<strong>${userDisplayName}</strong>
-						<span class="handle">${userHandle}</span> &sdot;
-						<span class="timeago">${time}</span>
-					</span>
-				</div>
-				<div class="textcopy">${textCopy}</div>
-				${numImages > 0 ? createImageHtml(images, postUrl) : ''}
-			</div>
-		</div>`;
+	return `<div class="quotebox"><div class="text"><div class="header"><span class="avatar">${avatar ? `<img src="${avatar}" alt="${userHandle}'s user avatar" />` : userAvatarSVG}</span><span class="othertext"><strong>${userDisplayName}</strong><span class="handle">${userHandle}</span> &sdot; <span class="timeago">${time}</span></span></div><div class="textcopy">${textCopy}</div>${numImages > 0 ? createImageHtml(images, postUrl) : ''}</div></div>`;
+};
+
+const createRichText = (text: string, facets: any): string => {
+	const rt: RichText = new RichText({ text, facets });
+	let finalText = ``;
+
+	for (const segment of rt.segments()) {
+		if (segment.isLink()) {
+			finalText += `<a href="${segment.link?.uri}" target="_blank">${segment.text}</a>`;
+		} else if (segment.isMention()) {
+			finalText += `<a href="https://bsky.app/profile/${segment.mention?.did}" target="_blank">${segment.text}</a>`;
+		} else if (segment.isTag()) {
+			finalText += `<a href="https://bsky.app/hashtag/${segment.tag?.tag}" target="_blank">${segment.text}</a>`;
+		} else {
+			finalText += segment.text;
+		}
+	}
+
+	return finalText;
 };
 
 const getPostUrl = (post: any) => {
