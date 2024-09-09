@@ -10,10 +10,12 @@ import { chunkArray, dayjs, generateFeedHtml, saveToCDN } from '/opt/shared.js';
 // TS Types
 import { FeedInfo } from 'types/data';
 
+const AWS_BSKY_FEED_TABLE = process.env.AWS_BSKY_FEED_TABLE || '';
+const AWS_S3_BUCKET_NAME = process.env.AWS_S3_BUCKET_NAME || '';
+const CDN_URI = process.env.CDN_URI || '';
+
 const dynamoClient = new DynamoDB({});
 const ddbClient = DynamoDBDocument.from(dynamoClient); // client is DynamoDB client
-
-const bskyFeedTable = process.env.AWS_BSKY_USER_TABLE || '';
 
 type GetDBPageInput = {
 	ExclusiveStartKey?: Record<string, AttributeValue>;
@@ -74,7 +76,7 @@ const handler: Handler = async () => {
 	// Get all feeds from DB older than five minutes ago
 	try {
 		// Get all items that need to be updated from the DB
-		const results = await getDBPage(bskyFeedTable);
+		const results = await getDBPage(AWS_BSKY_FEED_TABLE);
 
 		// If results flat-out doesn't exist, something went wrong
 		if (!results) {
@@ -133,7 +135,12 @@ const handler: Handler = async () => {
 
 			// Save it to the CDN
 			const { generatedFeedHTML } = generateFeedHTMLResp;
-			const cdnResp = await saveToCDN(feedToUpdate.feedInfo.bskyHash, generatedFeedHTML);
+			const cdnResp = await saveToCDN(
+				feedToUpdate.feedInfo.bskyHash,
+				generatedFeedHTML,
+				CDN_URI,
+				AWS_S3_BUCKET_NAME,
+			);
 			if (!cdnResp.success) {
 				throw new Error(`Couldn't save feed data to CDN`);
 			}
@@ -157,7 +164,7 @@ const handler: Handler = async () => {
 
 			const command = new BatchWriteCommand({
 				RequestItems: {
-					[bskyFeedTable]: putRequests,
+					[AWS_BSKY_FEED_TABLE]: putRequests,
 				},
 			});
 

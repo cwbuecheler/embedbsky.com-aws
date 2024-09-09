@@ -8,8 +8,9 @@ import { dayjs, generateFeedHtml, hashString, saveToCDN } from '/opt/shared.js';
 // TS Types
 import { RespData } from 'types/data';
 
-const bskyUserTable = process.env.AWS_BSKY_USER_TABLE;
-const CDN_URI = process.env.CDN_URI;
+const AWS_BSKY_FEED_TABLE = process.env.AWS_BSKY_FEED_TABLE;
+const AWS_S3_BUCKET_NAME = process.env.AWS_S3_BUCKET_NAME || '';
+const CDN_URI = process.env.CDN_URI || '';
 
 const getCreateBksyId = async (
 	bskyId: string,
@@ -23,7 +24,7 @@ const getCreateBksyId = async (
 
 		// Sanity check - does the timeline already exist in the DB?
 		const lookupResp = await ddbClient.get({
-			TableName: bskyUserTable,
+			TableName: AWS_BSKY_FEED_TABLE,
 			Key: {
 				bskyId,
 			},
@@ -53,7 +54,7 @@ const getCreateBksyId = async (
 
 		// Save it to the CDN
 		const { generatedFeedHTML } = generateFeedHTMLResp;
-		const cdnResp = await saveToCDN(bskyHash, generatedFeedHTML);
+		const cdnResp = await saveToCDN(bskyHash, generatedFeedHTML, CDN_URI, AWS_S3_BUCKET_NAME);
 		if (!cdnResp.success) {
 			throw new Error(`Couldn't save feed data to CDN`);
 		}
@@ -61,7 +62,7 @@ const getCreateBksyId = async (
 		// Add the bskyId and time updated to the DB
 		const now = dayjs().unix();
 		const putResp = await ddbClient.put({
-			TableName: bskyUserTable,
+			TableName: AWS_BSKY_FEED_TABLE,
 			Item: {
 				bskyId,
 				bskyHash,
