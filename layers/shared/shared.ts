@@ -1,7 +1,9 @@
+import crypto from 'crypto';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime.js';
 import updateLocale from 'dayjs/plugin/updateLocale.js';
 
+/* Dayjs Extentions */
 dayjs.extend(relativeTime);
 dayjs.extend(updateLocale);
 
@@ -23,4 +25,13 @@ dayjs.updateLocale('en', {
 	},
 });
 
-export { dayjs };
+const hashString = async (str: string) => {
+	const encoder = new TextEncoder();
+	const data = encoder.encode(str);
+	const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+	const hashArray = Array.from(new Uint8Array(hashBuffer));
+	const hashHex = hashArray.map((b) => b.toString(16).padStart(2, '0')).join(''); // convert bytes to hex string
+	return hashHex;
+};
+
+export { dayjs, hashString };

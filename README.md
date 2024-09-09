@@ -9,7 +9,10 @@ Embed your BlueSky feed in any website.
 [X] Create a full HTML string for a user's feed
 [X] Store that HTML string in S3 and serve it via CDN
 [X] Return the CDN URI to the front-end
-[] Improve HTML string and catch edge cases
+[X] Improve HTML string and catch edge cases
+[X] Switch datetimes to unix for easier math (I am lazy)
+[X] Hash usernames in DB / URI so it's harder to guess feed URIs
+[] Add feed-refresher function
 [] Improve TypeScript defs - hopefully by using AtProto's defs
 [] Write a README that's in any way useful to anyone
 

@@ -1,9 +1,9 @@
-// 3rd Party
+// 3rd Party & Node
 import { AtpAgent } from '@atproto/api';
 
 // AWS & Shared Layer
 import { DynamoDBDocument } from '@aws-sdk/lib-dynamodb';
-import { dayjs } from '/opt/shared.js';
+import { dayjs, hashString } from '/opt/shared.js';
 
 // Local functions
 import generateFeedHtml from './helpers/generatefeedhtml.js';
@@ -12,7 +12,8 @@ import saveToCDN from './helpers/savetocdn.js';
 // TS Types
 import { RespData } from 'types/data';
 
-const bksyUserTable = process.env.AWS_BSKY_USER_TABLE;
+const bskyUserTable = process.env.AWS_BSKY_USER_TABLE;
+const CDN_URI = process.env.CDN_URI;
 
 const getCreateBksyId = async (
 	bskyId: string,
@@ -21,14 +22,12 @@ const getCreateBksyId = async (
 	bskyAgent: AtpAgent,
 ): Promise<RespData> => {
 	try {
-		/*
-		.
-		Uncomment when done testing!
-		.
-		.
+		// Get the hash for this bsky handle
+		const bskyHash = await hashString(bskyId);
+
 		// Sanity check - does the timeline already exist in the DB?
 		const lookupResp = await ddbClient.get({
-			TableName: bksyUserTable,
+			TableName: bskyUserTable,
 			Key: {
 				bskyId,
 			},
@@ -36,10 +35,9 @@ const getCreateBksyId = async (
 
 		if (lookupResp.Item) {
 			// Just return the feed URL to the CDN
-			respData = { feedUri: `${CDN_URI}/${bskyId}` };
+			respData = { feedUri: `${CDN_URI}/feeds/${bskyHash}.html` };
 			return respData;
 		}
-		*/
 
 		const { data: feedData } = await bskyAgent.app.bsky.feed.getAuthorFeed({
 			actor: bskyId,
@@ -59,17 +57,19 @@ const getCreateBksyId = async (
 
 		// Save it to the CDN
 		const { generatedFeedHTML } = generateFeedHTMLResp;
-		const cdnResp = await saveToCDN(bskyId, generatedFeedHTML);
+		// TODO - hash the file name and return it, to make it harder for people to guess feeds
+		const cdnResp = await saveToCDN(bskyHash, generatedFeedHTML);
 		if (!cdnResp.success) {
 			throw new Error(`Couldn't save feed data to CDN`);
 		}
 
 		// Add the bskyId and time updated to the DB
-		const now = dayjs().toISOString();
+		const now = dayjs().unix();
 		const putResp = await ddbClient.put({
-			TableName: bksyUserTable,
+			TableName: bskyUserTable,
 			Item: {
 				bskyId,
+				bskyHash,
 				lastUpdated: now,
 			},
 		});

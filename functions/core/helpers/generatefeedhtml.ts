@@ -36,14 +36,14 @@ const createImageHtml = (images: BskyImage[], postUrl: string): string => {
 
 const createLinkCard = (linkInfo: any) => {
 	const { description, thumb, title, uri } = linkInfo;
+	const finalThumbUri = thumb.uri || thumb;
 	const domain = new URL(uri).hostname;
-	return `<div class="linkcard"><a href="${uri}" target="_blank"><div class="image"><img src="${thumb}" alt="header image - ${title}" /></div><div class="site">${domain}</div><div class="text"><strong>${title}</strong><br />${description}</div></a></div>`;
+	return `<div class="linkcard"><a href="${uri}" target="_blank"><div class="image"><img src="${finalThumbUri}" alt="header image - ${title}" /></div><div class="site">${domain}</div><div class="text"><strong>${title}</strong><br />${description}</div></a></div>`;
 };
 
 const createPostBox = (
 	post: any,
 	hasQuotePost: boolean,
-	hasLinkCard: boolean,
 	isRepost: boolean,
 	reason: any,
 ): string => {
@@ -59,10 +59,43 @@ const createPostBox = (
 		textCopy = createRichText(textCopy, post.record.facets);
 	}
 
+	// TODO - DRY this
+	// Find images and unbury them
+	let images: BskyImage[] = [];
+	if (post.embed?.images) {
+		images = post.embed.images;
+	} else if (post.embed?.media?.images) {
+		images = post.embed.media.images;
+	} else if (post.embeds) {
+		post.embeds.forEach((embed: any) => {
+			if (embed.images?.length > 0) {
+				images = embed.images;
+			}
+			if (embed.media?.images?.length > 0) {
+				images = embed.media.images;
+			}
+		});
+	}
+
+	// TODO - DRY this
+	// Discover link cards
+	let hasLinkCard = false;
+	let linkCardData: any = undefined;
+	if (post.embed?.external) {
+		hasLinkCard = true;
+		linkCardData = post.embed.external;
+	} else if (post.embeds) {
+		post.embeds.forEach((embed: any) => {
+			if (embed.external) {
+				hasLinkCard = true;
+				linkCardData = embed.external;
+			}
+		});
+	}
+
 	// Extract the stuff we need to display from the post obj
 	const avatar: string = post.author?.avatar || null;
-	const images: BskyImage[] = post.embed?.images || [];
-	const numImages: number = post.embed?.images?.length || 0;
+	const numImages: number = images.length;
 	const numLikes: string = post.likeCount > 0 ? post.likeCount.toString() : '';
 	const numReplies: string = post.replyCount > 0 ? post.replyCount.toString() : '';
 	const numReposts: string = post.repostCount > 0 ? post.repostCount.toString() : '';
@@ -78,7 +111,7 @@ const createPostBox = (
 	const userLink: string = `https://bsky.app/profile/${userHandle}/`;
 
 	// Put together a blob of HTML for the post
-	return `<div class="postcontainer">${isRepost ? `<div class="repostheader"><a href="${repostLink}" target="_blank">${repostSVG}reposted by ${repostDisplayName}</a></div>` : ''}<div class="postbox"><div class="col avatar"><div class="avatar-img"><a href="${userLink}" target="_blank">${avatar ? `<img src="${avatar}" alt="${userHandle}'s user avatar" />` : userAvatarSVG}</a></div></div><div class="col text"><div class="textdata"><strong><a href="${userLink}" target="_blank">${userDisplayName}</a></strong><span class="handle"><a href="${userLink}" target="_blank">${userHandle}</a></span> &sdot; <span class="timeago"><a href="${postUrl}" target="_blank">${time}</a></span></div><div class="textcopy">${textCopy}</div>${hasQuotePost ? createQuotePost(post.embed?.record) : ''}${hasLinkCard ? createLinkCard(post.embed?.external) : ''}${numImages > 0 ? createImageHtml(images, postUrl) : ''}<div class="icons"><div class="replies">${replySVG}<span class="num">${numReplies}</span></div><div class="reposts">${repostSVG}<span class="num">${numReposts}</span></div><div class="likes">${likeSVG}<span class="num">${numLikes}</span></div><div class="empty">&nbsp;</div></div></div></div></div>`;
+	return `<div class="postcontainer">${isRepost ? `<div class="repostheader"><a href="${repostLink}" target="_blank">${repostSVG}reposted by ${repostDisplayName}</a></div>` : ''}<div class="postbox"><div class="col avatar"><div class="avatar-img"><a href="${userLink}" target="_blank">${avatar ? `<img src="${avatar}" alt="${userHandle}'s user avatar" />` : userAvatarSVG}</a></div></div><div class="col text"><div class="textdata"><strong><a href="${userLink}" target="_blank">${userDisplayName}</a></strong><span class="handle"><a href="${userLink}" target="_blank">${userHandle}</a></span> &sdot; <span class="timeago"><a href="${postUrl}" target="_blank">${time}</a></span></div><div class="textcopy">${textCopy}</div>${numImages > 0 ? createImageHtml(images, postUrl) : ''}${hasQuotePost ? createQuotePost(post.embed?.record) : ''}${hasLinkCard ? createLinkCard(linkCardData) : ''}<div class="icons"><div class="replies">${replySVG}<span class="num">${numReplies}</span></div><div class="reposts">${repostSVG}<span class="num">${numReposts}</span></div><div class="likes">${likeSVG}<span class="num">${numLikes}</span></div><div class="empty">&nbsp;</div></div></div></div></div>`;
 };
 
 const createQuotePost = (record: any) => {
@@ -94,30 +127,53 @@ const createQuotePost = (record: any) => {
 
 	// Handle rich text
 	const hasFacets = record?.facets?.length > 0 ? true : false;
-	let textCopy: string = record?.text || '';
+	let textCopy: string = record?.text || record?.value?.text || '';
 	if (hasFacets) {
 		textCopy = createRichText(textCopy, record.facets);
 	}
 
-	// Extract the stuff we need to create a quote post
-	let embedWithImages: any = undefined;
-	if (record.embeds) {
+	// Find images and unbury them
+	let images: BskyImage[] = [];
+	if (record.embed?.images) {
+		images = record.embed.images;
+	} else if (record.embed?.media?.images) {
+		images = record.embed.media.images;
+	} else if (record.embeds) {
 		record.embeds.forEach((embed: any) => {
 			if (embed.images?.length > 0) {
-				embedWithImages = embed;
+				images = embed.images;
+			}
+			if (embed.media?.images?.length > 0) {
+				images = embed.media.images;
 			}
 		});
 	}
+
+	// Discover link cards
+	let hasLinkCard = false;
+	let linkCardData: any = undefined;
+	if (record.embed?.external) {
+		hasLinkCard = true;
+		linkCardData = record.embed.external;
+	} else if (record.embeds) {
+		record.embeds.forEach((embed: any) => {
+			if (embed.external) {
+				hasLinkCard = true;
+				linkCardData = embed.external;
+			}
+		});
+	}
+
+	// Extract the stuff we need to create a quote post
 	const avatar = record.author?.avatar || '';
-	const images: BskyImage[] = embedWithImages?.images || [];
-	const numImages: number = embedWithImages?.images?.length || 0;
+	const numImages: number = images?.length;
 	const postUrl: string = getPostUrl(record);
 	const time = record.value?.createdAt ? dayjs().to(dayjs(record.value.createdAt)) : 'unknown';
 	const userDisplayName = record.author?.displayName || 'unknown';
 	const userHandle = record.author?.handle || 'unknown';
 
 	// Create that HTML blob!
-	return `<div class="quotebox"><div class="text"><div class="header"><span class="avatar">${avatar ? `<img src="${avatar}" alt="${userHandle}'s user avatar" />` : userAvatarSVG}</span><span class="othertext"><strong>${userDisplayName}</strong><span class="handle">${userHandle}</span> &sdot; <span class="timeago">${time}</span></span></div><div class="textcopy">${textCopy}</div>${numImages > 0 ? createImageHtml(images, postUrl) : ''}</div></div>`;
+	return `<div class="quotebox"><div class="text"><div class="header"><span class="avatar">${avatar ? `<img src="${avatar}" alt="${userHandle}'s user avatar" />` : userAvatarSVG}</span><span class="othertext"><strong>${userDisplayName}</strong><span class="handle">${userHandle}</span> &sdot; <span class="timeago">${time}</span></span></div><div class="textcopy">${textCopy}</div>${hasLinkCard ? createLinkCard(linkCardData) : ''}${numImages > 0 ? createImageHtml(images, postUrl) : ''}</div></div>`;
 };
 
 const createRichText = (text: string, facets: any): string => {
@@ -159,10 +215,9 @@ const generateFeedHtml = (feedData: any): GenerateFeedHTMLResp => {
 		// Get post and reason objects
 		const { post, reason } = feedItem;
 		const hasQuotePost = post.embed && post.embed.record ? true : false;
-		const hasLinkCard = post.embed && post.embed.external ? true : false;
 		const isRepost = reason ? true : false;
 
-		feedHtml += createPostBox(post, hasQuotePost, hasLinkCard, isRepost, reason);
+		feedHtml += createPostBox(post, hasQuotePost, isRepost, reason);
 	}
 	return {
 		generatedFeedHTML: feedHtml,

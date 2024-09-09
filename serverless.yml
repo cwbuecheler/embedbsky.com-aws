@@ -35,6 +35,18 @@ functions:
       patterns:
         - '!**'
         - 'dist/functions/core/**'
+  refreshfeeds:
+    environment: ${file(env.${opt:stage, 'dev'}.json)}
+    handler: dist/functions/refreshfeeds/index.handler
+    events:
+      - schedule: rate(5 minutes)
+    layers:
+      - !Ref SharedLambdaLayer
+    package:
+      individually: true
+      patterns:
+        - '!**'
+        - 'dist/functions/refreshfeeds/**'
 
 layers:
   shared:
