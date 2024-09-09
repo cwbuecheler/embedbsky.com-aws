@@ -1,4 +1,4 @@
-export type FeedTableResp = {
+export type FeedInfo = {
 	bskyHash: string;
 	bskyId: string;
 	lastUpdated: number;

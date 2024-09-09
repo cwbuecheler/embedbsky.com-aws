@@ -1,13 +1,9 @@
 // 3rd Party & Node
-import { AtpAgent } from '@atproto/api';
+import { AtpAgent, RichText } from '@atproto/api';
 
 // AWS & Shared Layer
 import { DynamoDBDocument } from '@aws-sdk/lib-dynamodb';
-import { dayjs, hashString } from '/opt/shared.js';
-
-// Local functions
-import generateFeedHtml from './helpers/generatefeedhtml.js';
-import saveToCDN from './helpers/savetocdn.js';
+import { dayjs, generateFeedHtml, hashString, saveToCDN } from '/opt/shared.js';
 
 // TS Types
 import { RespData } from 'types/data';
@@ -50,14 +46,13 @@ const getCreateBksyId = async (
 		}
 
 		// Generate feed flat file
-		const generateFeedHTMLResp = await generateFeedHtml(feedData);
+		const generateFeedHTMLResp = await generateFeedHtml(feedData, RichText);
 		if (!generateFeedHTMLResp.success) {
 			throw new Error(`Couldn't generate feed HTML`);
 		}
 
 		// Save it to the CDN
 		const { generatedFeedHTML } = generateFeedHTMLResp;
-		// TODO - hash the file name and return it, to make it harder for people to guess feeds
 		const cdnResp = await saveToCDN(bskyHash, generatedFeedHTML);
 		if (!cdnResp.success) {
 			throw new Error(`Couldn't save feed data to CDN`);

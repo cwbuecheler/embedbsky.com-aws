@@ -1,6 +1,3 @@
-// 3rd party
-import { RichText } from '@atproto/api';
-
 // AWS & Shared Layer
 import { dayjs } from '/opt/shared.js';
 
@@ -46,6 +43,7 @@ const createPostBox = (
 	hasQuotePost: boolean,
 	isRepost: boolean,
 	reason: any,
+	richText: any,
 ): string => {
 	// Sanity check - no post? Return an empty string
 	if (!post) {
@@ -56,7 +54,7 @@ const createPostBox = (
 	const hasFacets = post.record?.facets?.length > 0 ? true : false;
 	let textCopy: string = post.record?.text || '';
 	if (hasFacets) {
-		textCopy = createRichText(textCopy, post.record.facets);
+		textCopy = createRichText(textCopy, post.record.facets, richText);
 	}
 
 	// TODO - DRY this
@@ -111,10 +109,10 @@ const createPostBox = (
 	const userLink: string = `https://bsky.app/profile/${userHandle}/`;
 
 	// Put together a blob of HTML for the post
-	return `<div class="postcontainer">${isRepost ? `<div class="repostheader"><a href="${repostLink}" target="_blank">${repostSVG}reposted by ${repostDisplayName}</a></div>` : ''}<div class="postbox"><div class="col avatar"><div class="avatar-img"><a href="${userLink}" target="_blank">${avatar ? `<img src="${avatar}" alt="${userHandle}'s user avatar" />` : userAvatarSVG}</a></div></div><div class="col text"><div class="textdata"><strong><a href="${userLink}" target="_blank">${userDisplayName}</a></strong><span class="handle"><a href="${userLink}" target="_blank">${userHandle}</a></span> &sdot; <span class="timeago"><a href="${postUrl}" target="_blank">${time}</a></span></div><div class="textcopy">${textCopy}</div>${numImages > 0 ? createImageHtml(images, postUrl) : ''}${hasQuotePost ? createQuotePost(post.embed?.record) : ''}${hasLinkCard ? createLinkCard(linkCardData) : ''}<div class="icons"><div class="replies">${replySVG}<span class="num">${numReplies}</span></div><div class="reposts">${repostSVG}<span class="num">${numReposts}</span></div><div class="likes">${likeSVG}<span class="num">${numLikes}</span></div><div class="empty">&nbsp;</div></div></div></div></div>`;
+	return `<div class="postcontainer">${isRepost ? `<div class="repostheader"><a href="${repostLink}" target="_blank">${repostSVG}reposted by ${repostDisplayName}</a></div>` : ''}<div class="postbox"><div class="col avatar"><div class="avatar-img"><a href="${userLink}" target="_blank">${avatar ? `<img src="${avatar}" alt="${userHandle}'s user avatar" />` : userAvatarSVG}</a></div></div><div class="col text"><div class="textdata"><strong><a href="${userLink}" target="_blank">${userDisplayName}</a></strong><span class="handle"><a href="${userLink}" target="_blank">${userHandle}</a></span> &sdot; <span class="timeago"><a href="${postUrl}" target="_blank">${time}</a></span></div><div class="textcopy">${textCopy}</div>${numImages > 0 ? createImageHtml(images, postUrl) : ''}${hasQuotePost ? createQuotePost(post.embed?.record, richText) : ''}${hasLinkCard ? createLinkCard(linkCardData) : ''}<div class="icons"><div class="replies">${replySVG}<span class="num">${numReplies}</span></div><div class="reposts">${repostSVG}<span class="num">${numReposts}</span></div><div class="likes">${likeSVG}<span class="num">${numLikes}</span></div><div class="empty">&nbsp;</div></div></div></div></div>`;
 };
 
-const createQuotePost = (record: any) => {
+const createQuotePost = (record: any, richText: any) => {
 	// Sanity check - no record? Return an empty string
 	if (!record) {
 		return '';
@@ -129,7 +127,7 @@ const createQuotePost = (record: any) => {
 	const hasFacets = record?.facets?.length > 0 ? true : false;
 	let textCopy: string = record?.text || record?.value?.text || '';
 	if (hasFacets) {
-		textCopy = createRichText(textCopy, record.facets);
+		textCopy = createRichText(textCopy, record.facets, richText);
 	}
 
 	// Find images and unbury them
@@ -176,8 +174,8 @@ const createQuotePost = (record: any) => {
 	return `<div class="quotebox"><div class="text"><div class="header"><span class="avatar">${avatar ? `<img src="${avatar}" alt="${userHandle}'s user avatar" />` : userAvatarSVG}</span><span class="othertext"><strong>${userDisplayName}</strong><span class="handle">${userHandle}</span> &sdot; <span class="timeago">${time}</span></span></div><div class="textcopy">${textCopy}</div>${hasLinkCard ? createLinkCard(linkCardData) : ''}${numImages > 0 ? createImageHtml(images, postUrl) : ''}</div></div>`;
 };
 
-const createRichText = (text: string, facets: any): string => {
-	const rt: RichText = new RichText({ text, facets });
+const createRichText = (text: string, facets: any, richText: any): string => {
+	const rt: any = new richText({ text, facets });
 	let finalText = ``;
 
 	for (const segment of rt.segments()) {
@@ -207,7 +205,7 @@ const getPostUrl = (post: any) => {
 	return `https://bsky.app/profile/${userHandle}/post/${uriId}`;
 };
 
-const generateFeedHtml = (feedData: any): GenerateFeedHTMLResp => {
+const generateFeedHtml = (feedData: any, richText: any): GenerateFeedHTMLResp => {
 	const { feed } = feedData;
 	let feedHtml = '';
 
@@ -217,7 +215,7 @@ const generateFeedHtml = (feedData: any): GenerateFeedHTMLResp => {
 		const hasQuotePost = post.embed && post.embed.record ? true : false;
 		const isRepost = reason ? true : false;
 
-		feedHtml += createPostBox(post, hasQuotePost, isRepost, reason);
+		feedHtml += createPostBox(post, hasQuotePost, isRepost, reason, richText);
 	}
 	return {
 		generatedFeedHTML: feedHtml,

@@ -3,6 +3,17 @@ import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime.js';
 import updateLocale from 'dayjs/plugin/updateLocale.js';
 
+// helpers
+import generateFeedHtml from './helpers/generatefeedhtml.js';
+import saveToCDN from './helpers/savetocdn.js';
+
+/* Chunk arrays into N chunks - borrowed from AWS utils */
+export function* chunkArray(arr: any[], stride = 1) {
+	for (let i = 0; i < arr.length; i += stride) {
+		yield arr.slice(i, Math.min(i + stride, arr.length));
+	}
+}
+
 /* Dayjs Extentions */
 dayjs.extend(relativeTime);
 dayjs.extend(updateLocale);
@@ -34,4 +45,4 @@ const hashString = async (str: string) => {
 	return hashHex;
 };
 
-export { dayjs, hashString };
+export { dayjs, generateFeedHtml, hashString, saveToCDN };
