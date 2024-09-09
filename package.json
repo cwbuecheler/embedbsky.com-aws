@@ -20,6 +20,7 @@
 		"cleanup": "rm -rf dist",
 		"deploy": "run-s cleanup build install-modules sls-deploy cleanup",
 		"deploy-core": "npm run cleanup && npm run build && bash installmodules.sh && sls deploy function --function core && npm run cleanup",
+		"deploy-refresh": "npm run cleanup && npm run build && bash installmodules.sh && sls deploy function --function refreshfeeds && npm run cleanup",
 		"deploy-prod": "run-s build install-modules sls-deploy-production cleanup",
 		"install-modules": "bash installmodules.sh",
 		"lint": "eslint -c .eslintrc.json .",

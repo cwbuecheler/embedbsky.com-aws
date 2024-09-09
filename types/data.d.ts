@@ -1,7 +1,7 @@
 export type FeedTableResp = {
 	bskyHash: string;
 	bskyId: string;
-	lastUpdated: string;
+	lastUpdated: number;
 };
 
 export type CDNResp = {
