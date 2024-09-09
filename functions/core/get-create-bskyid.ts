@@ -22,20 +22,6 @@ const getCreateBksyId = async (
 		// Get the hash for this bsky handle
 		const bskyHash = await hashString(bskyId);
 
-		// Sanity check - does the timeline already exist in the DB?
-		const lookupResp = await ddbClient.get({
-			TableName: AWS_BSKY_FEED_TABLE,
-			Key: {
-				bskyId,
-			},
-		});
-
-		if (lookupResp.Item) {
-			// Just return the feed URL to the CDN
-			respData = { feedUri: `${CDN_URI}/feeds/${bskyHash}.html` };
-			return respData;
-		}
-
 		const { data: feedData } = await bskyAgent.app.bsky.feed.getAuthorFeed({
 			actor: bskyId,
 			filter: 'posts_no_replies',
