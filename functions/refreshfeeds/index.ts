@@ -34,7 +34,7 @@ const handler: Handler = async () => {
 			return;
 		}
 	} catch (err: any) {
-		console.error(`Error refreshing feeds - db lookup - ${err.message}`);
+		console.error(`Error refreshing feeds - DB lookup - ${err.message}`);
 	}
 
 	// Get updated feed for each result from the DB
