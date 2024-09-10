@@ -132,9 +132,14 @@ const handler: Handler = async () => {
 		}
 
 		const dbResps = await Promise.allSettled(dbSavePromises);
-		console.log(dbResps);
+
+		dbResps.forEach((resp) => {
+			if (resp.status === 'rejected') {
+				throw new Error(resp.reason);
+			}
+		});
 	} catch (err: any) {
-		console.error(`Error refreshing feeds - DB save - ${err.message}`);
+		console.error(`Error refreshing feeds - DB Save - ${err.message}`);
 	}
 };
 
