@@ -8,7 +8,7 @@ import { BatchWriteCommand, DynamoDBDocument } from '@aws-sdk/lib-dynamodb';
 import { chunkArray, dayjs, generateFeedHtml, saveToCDN } from '/opt/shared.js';
 
 // Local Modules
-import getDBPage from './helpers/getdbpage';
+import getDBPage from './helpers/getdbpage.js';
 
 // TS Types
 import { FeedInfo } from 'types/data';
