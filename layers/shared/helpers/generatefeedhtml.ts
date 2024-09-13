@@ -33,9 +33,10 @@ const createImageHtml = (images: BskyImage[], postUrl: string): string => {
 
 const createLinkCard = (linkInfo: any) => {
 	const { description, thumb, title, uri } = linkInfo;
-	const finalThumbUri = thumb.uri || thumb;
+	const hasThumb = thumb ? true : false;
+	const finalThumbUri = thumb?.uri || thumb;
 	const domain = new URL(uri).hostname;
-	return `<div class="linkcard"><a href="${uri}" target="_blank"><div class="image"><img src="${finalThumbUri}" alt="header image - ${title}" /></div><div class="site">${domain}</div><div class="text"><strong>${title}</strong><br />${description}</div></a></div>`;
+	return `<div class="linkcard"><a href="${uri}" target="_blank">${hasThumb ? `<div class="image"><img src="${finalThumbUri}" alt="header image - ${title}" /></div>` : ''}<div class="site">${domain}</div><div class="text"><strong>${title}</strong><br />${description}</div></a></div>`;
 };
 
 const createPostBox = (
