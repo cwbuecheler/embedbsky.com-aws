@@ -60,6 +60,12 @@ const handler: Handler = async (event) => {
 			try {
 				const bskyAgent = new AtpAgent({ service: 'https://api.bsky.app' });
 				respData = await getCreateBksyId(bskyId, respData, ddbClient, bskyAgent);
+				if (respData.unauth) {
+					statusCode = 403;
+					message = `Sorry, this user has their timeline set to viewable by authenticated users only.`;
+					errorMessages.push(`Couldn't display feed because it's hidden from unauthorized users`);
+					break;
+				}
 			} catch (err: any) {
 				errorMessages.push(err.message);
 				statusCode = 500;
