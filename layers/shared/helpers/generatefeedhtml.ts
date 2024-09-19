@@ -219,7 +219,7 @@ const generateFeedHtml = (feedData: any, richText: any): GenerateFeedHTMLResp =>
 
 	// We're using the feed items to get some info about the feed owner
 	const firstItem = feed[0];
-	const author = firstItem.reason ? firstItem.reason.author : firstItem.post.author;
+	const author = firstItem.reason ? firstItem.reason.by : firstItem.post.author;
 
 	// Then we're creating a header with that info
 	let feedHtml = createFeedHeader(author);

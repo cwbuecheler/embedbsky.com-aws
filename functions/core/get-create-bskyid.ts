@@ -33,9 +33,9 @@ const getCreateBksyId = async (
 		}
 
 		// Check to see if this is a no-unauthorized feed and if so, throw
-		const post = feedData.feed[0].post as any;
-		if (post) {
-			const authorToCheck = post.reason ? post.reason.by : post.author;
+		const feedZero = feedData.feed[0] as any;
+		if (feedZero) {
+			const authorToCheck = feedZero.reason ? feedZero.reason.by : feedZero.post.author;
 			const labels = authorToCheck?.labels;
 			if (labels) {
 				for (let i = 0; i < labels.length; i++) {
