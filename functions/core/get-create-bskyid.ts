@@ -32,6 +32,23 @@ const getCreateBksyId = async (
 			throw new Error(`Couldn't get feed data from BlueSky`);
 		}
 
+		// Check to see if this is a no-unauthorized feed and if so, throw
+		const feedZero = feedData.feed[0] as any;
+		if (feedZero) {
+			const authorToCheck = feedZero.reason ? feedZero.reason.by : feedZero.post.author;
+			const labels = authorToCheck?.labels;
+			if (labels) {
+				for (let i = 0; i < labels.length; i++) {
+					if (labels[i].val === '!no-unauthenticated') {
+						respData = {
+							unauth: true,
+						};
+						return respData;
+					}
+				}
+			}
+		}
+
 		// Generate feed flat file
 		const generateFeedHTMLResp = await generateFeedHtml(feedData, RichText);
 		if (!generateFeedHTMLResp.success) {

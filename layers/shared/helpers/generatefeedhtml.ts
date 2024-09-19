@@ -17,6 +17,14 @@ type BskyImage = {
 	thumb: string;
 };
 
+const createFeedHeader = (author: any) => {
+	const avatar: string = author?.avatar || null;
+	const userDisplayName: string = author?.displayName || 'unknown';
+	const userHandle: string = author?.handle || 'unknown';
+	const userLink: string = `https://bsky.app/profile/${userHandle}/`;
+	return `<div class="header"><div class="avatar"><a href="${userLink}" target="_blank"><img src="${avatar}" alt="${userDisplayName} avatar" /></a></div><div class="text"><a class="name" href="${userLink}" target="_blank">${userDisplayName}</a><a class="handle" href="${userLink}" target="_blank">@${userHandle}</a></div></div>`;
+};
+
 const createImageHtml = (images: BskyImage[], postUrl: string): string => {
 	if (!images) {
 		return '';
@@ -33,9 +41,10 @@ const createImageHtml = (images: BskyImage[], postUrl: string): string => {
 
 const createLinkCard = (linkInfo: any) => {
 	const { description, thumb, title, uri } = linkInfo;
-	const finalThumbUri = thumb.uri || thumb;
+	const hasThumb = thumb ? true : false;
+	const finalThumbUri = thumb?.uri || thumb;
 	const domain = new URL(uri).hostname;
-	return `<div class="linkcard"><a href="${uri}" target="_blank"><div class="image"><img src="${finalThumbUri}" alt="header image - ${title}" /></div><div class="site">${domain}</div><div class="text"><strong>${title}</strong><br />${description}</div></a></div>`;
+	return `<div class="linkcard"><a href="${uri}" target="_blank">${hasThumb ? `<div class="image"><img src="${finalThumbUri}" alt="header image - ${title}" /></div>` : ''}<div class="site">${domain}</div><div class="text"><strong>${title}</strong><br />${description}</div></a></div>`;
 };
 
 const createPostBox = (
@@ -109,7 +118,7 @@ const createPostBox = (
 	const userLink: string = `https://bsky.app/profile/${userHandle}/`;
 
 	// Put together a blob of HTML for the post
-	return `<div class="postcontainer">${isRepost ? `<div class="repostheader"><a href="${repostLink}" target="_blank">${repostSVG}reposted by ${repostDisplayName}</a></div>` : ''}<div class="postbox"><div class="col avatar"><div class="avatar-img"><a href="${userLink}" target="_blank">${avatar ? `<img src="${avatar}" alt="${userHandle}'s user avatar" />` : userAvatarSVG}</a></div></div><div class="col text"><div class="textdata"><strong><a href="${userLink}" target="_blank"><span>${userDisplayName}</span></a></strong> <span class="handle"><a href="${userLink}" target="_blank">${userHandle}</a></span> &sdot; <span class="timeago"><a href="${postUrl}" target="_blank">${time}</a></span></div><div class="textcopy">${textCopy}</div>${numImages > 0 ? createImageHtml(images, postUrl) : ''}${hasQuotePost ? createQuotePost(post.embed?.record, richText) : ''}${hasLinkCard ? createLinkCard(linkCardData) : ''}<div class="icons"><div class="replies">${replySVG}<span class="num">${numReplies}</span></div><div class="reposts">${repostSVG}<span class="num">${numReposts}</span></div><div class="likes">${likeSVG}<span class="num">${numLikes}</span></div><div class="empty">&nbsp;</div></div></div></div></div>`;
+	return `<div class="postcontainer">${isRepost ? `<div class="repostheader"><a href="${repostLink}" target="_blank">${repostSVG}reposted by ${repostDisplayName}</a></div>` : ''}<div class="postbox"><div class="col avatar"><div class="avatar-img"><a href="${userLink}" target="_blank">${avatar ? `<img src="${avatar}" alt="${userHandle}'s user avatar" />` : userAvatarSVG}</a></div></div><div class="col text"><div class="textdata"><strong><a href="${userLink}" target="_blank"><span>${userDisplayName}</span></a></strong> <span class="handle"><a href="${userLink}" target="_blank">@${userHandle}</a></span> &sdot; <span class="timeago"><a href="${postUrl}" target="_blank">${time}</a></span></div><div class="textcopy">${textCopy}</div>${numImages > 0 ? createImageHtml(images, postUrl) : ''}${hasQuotePost ? createQuotePost(post.embed?.record, richText) : ''}${hasLinkCard ? createLinkCard(linkCardData) : ''}<div class="icons"><div class="replies">${replySVG}<span class="num">${numReplies}</span></div><div class="reposts">${repostSVG}<span class="num">${numReposts}</span></div><div class="likes">${likeSVG}<span class="num">${numLikes}</span></div><div class="empty">&nbsp;</div></div></div></div></div>`;
 };
 
 const createQuotePost = (record: any, richText: any) => {
@@ -171,7 +180,7 @@ const createQuotePost = (record: any, richText: any) => {
 	const userHandle = record.author?.handle || 'unknown';
 
 	// Create that HTML blob!
-	return `<div class="quotebox"><div class="text"><div class="header"><span class="avatar">${avatar ? `<img src="${avatar}" alt="${userHandle}'s user avatar" />` : userAvatarSVG}</span><span class="othertext"><strong><span>${userDisplayName}</span></strong> <span class="handle">${userHandle}</span> &sdot; <span class="timeago">${time}</span></span></div><div class="textcopy">${textCopy}</div>${hasLinkCard ? createLinkCard(linkCardData) : ''}${numImages > 0 ? createImageHtml(images, postUrl) : ''}</div></div>`;
+	return `<div class="quotebox"><div class="text"><div class="header"><span class="avatar">${avatar ? `<img src="${avatar}" alt="${userHandle}'s user avatar" />` : userAvatarSVG}</span><span class="othertext"><strong><span>${userDisplayName}</span></strong> <span class="handle">@${userHandle}</span> &sdot; <span class="timeago">${time}</span></span></div><div class="textcopy">${textCopy}</div>${hasLinkCard ? createLinkCard(linkCardData) : ''}${numImages > 0 ? createImageHtml(images, postUrl) : ''}</div></div>`;
 };
 
 const createRichText = (text: string, facets: any, richText: any): string => {
@@ -207,8 +216,15 @@ const getPostUrl = (post: any) => {
 
 const generateFeedHtml = (feedData: any, richText: any): GenerateFeedHTMLResp => {
 	const { feed } = feedData;
-	let feedHtml = '';
 
+	// We're using the feed items to get some info about the feed owner
+	const firstItem = feed[0];
+	const author = firstItem.reason ? firstItem.reason.by : firstItem.post.author;
+
+	// Then we're creating a header with that info
+	let feedHtml = createFeedHeader(author);
+
+	// Then we're adding all the posts
 	for (const feedItem of feed) {
 		// Get post and reason objects
 		const { post, reason } = feedItem;

@@ -1,21 +1,20 @@
 // 3rd Party & Node
-import { AtpAgent, RichText } from '@atproto/api';
+import { AtpAgent } from '@atproto/api';
 
 // AWS and Shared Layer
 import { Handler } from 'aws-lambda';
 import { DynamoDB } from '@aws-sdk/client-dynamodb';
-import { BatchWriteCommand, DynamoDBDocument } from '@aws-sdk/lib-dynamodb';
-import { chunkArray, dayjs, generateFeedHtml, saveToCDN } from '/opt/shared.js';
+import { DynamoDBDocument } from '@aws-sdk/lib-dynamodb';
 
 // Local Modules
+import deleteFeeds from './helpers/deletefeeds.js';
 import getDBPage from './helpers/getdbpage.js';
+import updateFeeds from './helpers/updatefeeds.js';
 
 // TS Types
 import { FeedInfo } from 'types/data';
 
 const AWS_BSKY_FEED_TABLE = process.env.AWS_BSKY_FEED_TABLE || '';
-const AWS_S3_BUCKET_NAME = process.env.AWS_S3_BUCKET_NAME || '';
-const CDN_URI = process.env.CDN_URI || '';
 
 const dynamoClient = new DynamoDB({});
 const ddbClient = DynamoDBDocument.from(dynamoClient); // client is DynamoDB client
@@ -53,7 +52,7 @@ const handler: Handler = async () => {
 	try {
 		bskyResponses = await Promise.allSettled(bskyPromises);
 	} catch (err: any) {
-		console.error(`Error refreshing feeds - BlueSky loolkup - ${err.message}`);
+		console.error(`Error refreshing feeds - BlueSky lookup - ${err.message}`);
 	}
 
 	// iterate over all the responses and prepare to update or remove feeds from the DB
@@ -71,6 +70,7 @@ const handler: Handler = async () => {
 				continue;
 			} else {
 				// This is an unknown error so we don't want to delete OR update the feed
+				console.error(`Unknown error returned from BlueSky - ${resp.reason?.error}`);
 				continue;
 			}
 		}
@@ -80,66 +80,20 @@ const handler: Handler = async () => {
 		});
 	}
 
-	try {
-		/* Handle feed updates first */
-		for (const feedToUpdate of feedsToUpdate) {
-			// Generate feed flat file
-			const generateFeedHTMLResp = await generateFeedHtml(feedToUpdate, RichText);
-			if (!generateFeedHTMLResp.success) {
-				throw new Error(`Couldn't generate feed HTML`);
-			}
-
-			// Save it to the CDN
-			const { generatedFeedHTML } = generateFeedHTMLResp;
-			const cdnResp = await saveToCDN(
-				feedToUpdate.feedInfo.bskyHash,
-				generatedFeedHTML,
-				CDN_URI,
-				AWS_S3_BUCKET_NAME,
-			);
-			if (!cdnResp.success) {
-				throw new Error(`Couldn't save feed data to CDN`);
-			}
-		}
-	} catch (err: any) {
-		console.error(`Error refreshing feeds - CDN save - ${err.message}`);
+	// Handle updating feeds first
+	const didAllFeedUpdatesSucceed = await updateFeeds(ddbClient, feedsToUpdate);
+	if (!didAllFeedUpdatesSucceed) {
+		console.error(
+			`Error updating feeds - Not all feeds succeeded in updating - see individual errors`,
+		);
 	}
 
-	// Break the results into chunks of 25 (max batchwrite amount)
-	const feedInfoChunks = chunkArray(dbScanResults, 25);
-
-	// Iterate over results and update the feeds
-	const dbSavePromises: Promise<any>[] = [];
-
-	try {
-		for (const chunk of feedInfoChunks) {
-			// generate put requests for each feedInfo object in the chunk
-			const putRequests = chunk.map((feedInfo) => {
-				const newFeedInfo = {
-					...feedInfo,
-					lastUpdated: dayjs().unix(),
-				};
-				return { PutRequest: { Item: newFeedInfo } };
-			});
-
-			const command = new BatchWriteCommand({
-				RequestItems: {
-					[AWS_BSKY_FEED_TABLE]: putRequests,
-				},
-			});
-
-			dbSavePromises.push(ddbClient.send(command));
-		}
-
-		const dbResps = await Promise.allSettled(dbSavePromises);
-
-		dbResps.forEach((resp) => {
-			if (resp.status === 'rejected') {
-				throw new Error(resp.reason);
-			}
-		});
-	} catch (err: any) {
-		console.error(`Error refreshing feeds - DB Save - ${err.message}`);
+	// Now delete any feeds that for users who no longer exist on bsky
+	const didAllFeedDeletesSucceed = await deleteFeeds(feedsToDelete, ddbClient);
+	if (!didAllFeedDeletesSucceed) {
+		console.error(
+			`Error deleting feeds - Not all feeds succeeded in deleting - see individual errors`,
+		);
 	}
 };
 
