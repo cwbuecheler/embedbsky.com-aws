@@ -8,7 +8,6 @@ import { DynamoDBDocument } from '@aws-sdk/lib-dynamodb';
 
 // Local Modules
 import getCreateBksyId from './get-create-bskyid.js';
-import getOAuthURI from './getoauthuri.js';
 
 // TS Types
 import { RespData } from 'types/data';
@@ -73,21 +72,6 @@ const handler: Handler = async (event) => {
 				console.error(err);
 			}
 			message = `Successfully created feed HTML and saved to CDN`;
-			break;
-		}
-
-		case 'POST /oauth/{handle}': {
-			const { handle } = pathParams;
-
-			try {
-				const respUri = await getOAuthURI(handle);
-				respData.data = respUri;
-			} catch (err: any) {
-				message = 'Login Failed';
-				errorMessages.push(err.message);
-				statusCode = 500;
-				console.error(err);
-			}
 			break;
 		}
 

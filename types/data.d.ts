@@ -1,5 +1,11 @@
 import { AttributeValue } from '@aws-sdk/client-dynamodb';
 
+export type BodyVerifyLogin = {
+	code: string;
+	iss: string;
+	state: string;
+};
+
 export type CDNResp = {
 	savedFeedURI: string;
 	success: boolean;
