@@ -44,7 +44,7 @@ functions:
           method: GET
           path: /lookup/{bskyId}
       - httpApi:
-          method: GET
+          method: POST
           path: /create/{bskyId}
     layers:
       - !Ref SharedLambdaLayer

@@ -5,6 +5,7 @@
 		"@aws-sdk/lib-dynamodb": "^3.637.0"
 	},
 	"dependencies": {
-		"@atproto/api": "^0.13.5"
+		"@atproto/api": "^0.13.5",
+		"@atproto/oauth-client-node": "^0.1.1"
 	}
 }

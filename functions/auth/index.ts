@@ -1,12 +1,5 @@
-// import {
-// 	createBidirectionalResolver,
-// 	createIdResolver,
-// 	BidirectionalResolver,
-// } from '#/id-resolver';
-// import { IdResolver, MemoryCache } from '@atproto/identity';
-
 // 3rd Party Modules
-// import type { OAuthClient } from '@atproto/oauth-client-node';
+import { NodeOAuthClient, OAuthResolverError } from '@atproto/oauth-client-node';
 import { isValidHandle } from '@atproto/syntax';
 
 // AWS and Shared Layer
@@ -18,8 +11,7 @@ import { DynamoDBDocument } from '@aws-sdk/lib-dynamodb';
 import { createClient } from './session/client.js';
 
 // TS Types
-import { BodyVerifyLogin, RespData } from 'types/data';
-import { NodeOAuthClient, OAuthResolverError } from '@atproto/oauth-client-node';
+import { BodyVerifyLogin, HTTPAPIEvent, RespData } from 'types/data';
 
 const dynamoClient = new DynamoDB({});
 const ddbClient = DynamoDBDocument.from(dynamoClient); // client is DynamoDB client
@@ -32,8 +24,8 @@ try {
 	console.error(err);
 }
 
-const handler: Handler = async (event) => {
-	const pathParams: { [key: string]: string } = event.pathParameters || {};
+const handler: Handler = async (event: HTTPAPIEvent) => {
+	const pathParams: { [key: string]: string | undefined } = event.pathParameters || {};
 	const routeKey: string = event.routeKey || '';
 
 	// Response variables
@@ -81,7 +73,7 @@ const handler: Handler = async (event) => {
 
 		case 'POST /login/verify': {
 			// pull data from the event
-			const evtBody: BodyVerifyLogin = JSON.parse(event.body); // used for POST/PUT routes
+			const evtBody: BodyVerifyLogin = JSON.parse(event.body || '{}');
 
 			// Sanity check - data needs to be there
 			if (!evtBody.code || !evtBody.iss || !evtBody.state) {
@@ -97,11 +89,10 @@ const handler: Handler = async (event) => {
 			const params = new URLSearchParams(paramString);
 			try {
 				const { session } = await oauthClient.callback(params);
-				if (session.sub?.includes('did')) {
-					// We don't need to store session data in cookies because we're just validating the login
+				if (session.did) {
 					respData = {
 						success: true,
-						did_plc: session.sub,
+						did: session.did,
 					};
 				}
 			} catch (err: any) {
