@@ -3,5 +3,8 @@
 		"@atproto/api": "^0.13.5",
 		"dayjs": "^1.11.13"
 	},
-	"type": "module"
+	"type": "module",
+	"devDependencies": {
+		"@aws-sdk/client-s3": "^3.654.0"
+	}
 }
