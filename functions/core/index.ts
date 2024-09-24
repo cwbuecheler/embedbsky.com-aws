@@ -9,6 +9,11 @@ import { DynamoDBDocument } from '@aws-sdk/lib-dynamodb';
 
 // Local Modules
 import getCreateBksyId from './get-create-bskyid.js';
+import {
+	createBidirectionalResolver,
+	createIdResolver,
+	BidirectionalResolver,
+} from './idresolver.js';
 import { createClient } from './session/client.js';
 
 // TS Types
@@ -16,6 +21,9 @@ import { BodyCreateFeed, HTTPAPIEvent, RespData } from 'types/data';
 
 const dynamoClient = new DynamoDB({});
 const ddbClient = DynamoDBDocument.from(dynamoClient); // client is DynamoDB client
+
+const baseIdResolver = createIdResolver();
+const resolver: BidirectionalResolver = createBidirectionalResolver(baseIdResolver);
 
 let oauthClient: NodeOAuthClient;
 try {
@@ -79,6 +87,7 @@ const handler: Handler = async (event: HTTPAPIEvent) => {
 				throw new Error(`No DID was included in the POST request - couldn't verify auth`);
 			}
 
+			// Establish or pick back up the OAuth session & generate a Bsky agent
 			let bskyAgent;
 			try {
 				const oauthSession = await oauthClient.restore(evtBody.did);
@@ -91,6 +100,16 @@ const handler: Handler = async (event: HTTPAPIEvent) => {
 				errorMessages.push(err.message);
 				message = `Agent Error - ${err.message}`;
 				statusCode = 500;
+				break;
+			}
+
+			// Make sure the handle returned by the ID resolver matches the handle being passed in
+			const resolvedHandle = await resolver.resolveDidToHandle(evtBody.did);
+			if (resolvedHandle !== bskyId) {
+				console.error(`Authenticated user does not match timeline`);
+				errorMessages.push(`Authenticated user does not match timeline`);
+				message = `The Authenticated user does not match the handle being used for lookup`;
+				statusCode = 403;
 				break;
 			}
 
