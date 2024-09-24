@@ -1,5 +1,5 @@
 // 3rd Party & Node
-import { AtpAgent, RichText } from '@atproto/api';
+import { Agent, AtpAgent, RichText } from '@atproto/api';
 
 // AWS & Shared Layer
 import { DynamoDBDocument } from '@aws-sdk/lib-dynamodb';
@@ -16,7 +16,7 @@ const getCreateBksyId = async (
 	bskyId: string,
 	respData: RespData,
 	ddbClient: DynamoDBDocument,
-	bskyAgent: AtpAgent,
+	bskyAgent: AtpAgent | Agent,
 ): Promise<RespData> => {
 	try {
 		// Get the hash for this bsky handle

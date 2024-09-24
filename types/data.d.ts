@@ -1,4 +1,15 @@
 import { AttributeValue } from '@aws-sdk/client-dynamodb';
+import { APIGatewayProxyEvent } from 'aws-lambda';
+
+export type BodyCreateFeed = {
+	did: string;
+};
+
+export type BodyVerifyLogin = {
+	code: string;
+	iss: string;
+	state: string;
+};
 
 export type CDNResp = {
 	savedFeedURI: string;
@@ -24,6 +35,10 @@ type GetDBPageInput = {
 	FilterExpression: string;
 	TableName: string;
 };
+
+export interface HTTPAPIEvent extends APIGatewayProxyEvent {
+	routeKey?: string;
+}
 
 export type RespData = {
 	[key: string]: any;

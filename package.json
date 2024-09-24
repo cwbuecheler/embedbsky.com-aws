@@ -1,9 +1,5 @@
 {
 	"devDependencies": {
-		"@aws-sdk/client-api-gateway": "^3.637.0",
-		"@aws-sdk/client-lambda": "^3.637.0",
-		"@aws-sdk/client-s3": "^3.637.0",
-		"@aws-sdk/lib-storage": "^3.637.0",
 		"@eslint/js": "^9.9.1",
 		"@types/aws-lambda": "^8.10.145",
 		"@types/node": "^20.12.7",
@@ -19,6 +15,7 @@
 		"build-sls": "npm run build && sls package",
 		"cleanup": "rm -rf dist",
 		"deploy": "run-s cleanup build install-modules sls-deploy cleanup",
+		"deploy-auth": "npm run cleanup && npm run build && bash installmodules.sh && sls deploy function --function auth && npm run cleanup",
 		"deploy-core": "npm run cleanup && npm run build && bash installmodules.sh && sls deploy function --function core && npm run cleanup",
 		"deploy-refresh": "npm run cleanup && npm run build && bash installmodules.sh && sls deploy function --function refreshfeeds && npm run cleanup",
 		"deploy-prod": "run-s cleanup build install-modules sls-deploy-production cleanup",
