@@ -17,6 +17,7 @@ const getCreateBksyId = async (
 	respData: RespData,
 	ddbClient: DynamoDBDocument,
 	bskyAgent: AtpAgent | Agent,
+	includeReposts: boolean,
 ): Promise<RespData> => {
 	try {
 		// Get the hash for this bsky handle
@@ -25,10 +26,10 @@ const getCreateBksyId = async (
 		const { data: feedData } = await bskyAgent.app.bsky.feed.getAuthorFeed({
 			actor: bskyId,
 			filter: 'posts_no_replies',
-			limit: 30,
+			limit: 90, // We're getting too many here to handle reposts (see below)
 		});
 
-		if (!feedData) {
+		if (!feedData || !feedData.feed) {
 			throw new Error(`Couldn't get feed data from BlueSky`);
 		}
 
@@ -47,6 +48,27 @@ const getCreateBksyId = async (
 					}
 				}
 			}
+		}
+
+		// This is hacky - if we're filtering reposts, do so till we get 30 results
+		// Otherwise just return the first 30(ish).
+		// This will eventually be addressed here:
+		// https://github.com/bluesky-social/atproto/issues/2048
+		if (includeReposts) {
+			const thirtyPosts = feedData.feed.slice(0, 30);
+			feedData.feed = thirtyPosts;
+		} else {
+			const justPosts = [];
+			for (let i = 0; i < feedData.feed.length; i++) {
+				const post = feedData.feed[i];
+				if (!post.reason) {
+					justPosts.push(post);
+				}
+				if (justPosts.length > 29) {
+					break;
+				}
+			}
+			feedData.feed = justPosts;
 		}
 
 		// Generate feed flat file

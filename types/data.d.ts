@@ -3,6 +3,7 @@ import { APIGatewayProxyEvent } from 'aws-lambda';
 
 export type BodyCreateFeed = {
 	did: string;
+	includeReposts: string;
 };
 
 export type BodyVerifyLogin = {
