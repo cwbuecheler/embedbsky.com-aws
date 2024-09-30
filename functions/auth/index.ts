@@ -44,7 +44,11 @@ const handler: Handler = async (event: HTTPAPIEvent) => {
 			// Validate
 			const { bskyId } = pathParams;
 			if (typeof bskyId !== 'string' || !isValidHandle(bskyId)) {
-				throw new Error(`Couldn't Log In - Invalid BlueSky Handle`);
+				console.error(`Couldn't Log In - Invalid BlueSky Handle`);
+				errorMessages.push(`Couldn't Log In - Invalid BlueSky Handle`);
+				message = `Couldn't Log In - Invalid BlueSky Handle`;
+				statusCode = 403;
+				break;
 			}
 
 			// Initiate the OAuth flow
