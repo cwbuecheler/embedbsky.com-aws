@@ -89,6 +89,7 @@ const handler: Handler = async (event: HTTPAPIEvent) => {
 
 			// Establish or pick back up the OAuth session & generate a Bsky agent
 			let bskyAgent;
+			const includeReposts = evtBody.includeReposts ? true : false;
 			try {
 				const oauthSession = await oauthClient.restore(evtBody.did);
 				bskyAgent = oauthSession ? new Agent(oauthSession) : null;
@@ -114,7 +115,7 @@ const handler: Handler = async (event: HTTPAPIEvent) => {
 			}
 
 			try {
-				respData = await getCreateBksyId(bskyId, respData, ddbClient, bskyAgent);
+				respData = await getCreateBksyId(bskyId, respData, ddbClient, bskyAgent, includeReposts);
 				if (respData.unauth) {
 					statusCode = 403;
 					message = `Sorry, this user has their timeline set to viewable by authenticated users only.`;
