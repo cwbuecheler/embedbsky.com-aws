@@ -14,7 +14,7 @@ export const createClient = async (ddbClient: DynamoDBDocument) => {
 		clientMetadata: {
 			application_type: 'web',
 			client_id: publicURI
-				? `${uri}/client-metadata.json`
+				? `${uri}client-metadata.json`
 				: `http://localhost?redirect_uri=${encodeURIComponent(uri)}`,
 			client_name: 'Embed Bsky',
 			client_uri: uri,
