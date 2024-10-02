@@ -22,7 +22,7 @@ const createFeedHeader = (author: any) => {
 	const userDisplayName: string = author?.displayName || 'unknown';
 	const userHandle: string = author?.handle || 'unknown';
 	const userLink: string = `https://bsky.app/profile/${userHandle}/`;
-	return `<div class="header"><div class="avatar"><a href="${userLink}" target="_blank"><img src="${avatar}" alt="${userDisplayName} avatar" /></a></div><div class="text"><a class="name" href="${userLink}" target="_blank">${userDisplayName}</a><a class="handle" href="${userLink}" target="_blank">@${userHandle}</a></div></div>`;
+	return `<div class="header"><div class="avatar"><a href="${userLink}" target="_blank"><img src="${avatar}" alt="${userDisplayName} avatar" /></a></div><div class="text"><div class="namecontainer"><a class="name" href="${userLink}" target="_blank">${userDisplayName}</a></div><a class="handle" href="${userLink}" target="_blank">@${userHandle}</a></div></div>`;
 };
 
 const createImageHtml = (images: BskyImage[], postUrl: string): string => {
