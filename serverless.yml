@@ -1,4 +1,4 @@
-service: skyfeed
+service: embed-bsky
 frameworkVersion: '3'
 
 provider:
@@ -68,9 +68,9 @@ functions:
 
 layers:
   shared:
-    name: skyfeed-shared
+    name: embed-bsky-shared
     path: dist/layers/shared
-    description: Shared functionality for skyfeed
+    description: Shared functionality for Embed Bsky
     compatibleRuntimes:
       - nodejs18.x
     compatibleArchitectures:

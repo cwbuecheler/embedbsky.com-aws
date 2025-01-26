@@ -18,6 +18,7 @@ const getCreateBksyId = async (
 	ddbClient: DynamoDBDocument,
 	bskyAgent: AtpAgent | Agent,
 	includeReposts: boolean,
+	limit: number,
 ): Promise<RespData> => {
 	try {
 		// Get the hash for this bsky handle
@@ -51,12 +52,12 @@ const getCreateBksyId = async (
 		}
 
 		// This is hacky - if we're filtering reposts, do so till we get 30 results
-		// Otherwise just return the first 30(ish).
+		// Otherwise just return the first 30(ish) (or whatever the limit is).
 		// This will eventually be addressed here:
 		// https://github.com/bluesky-social/atproto/issues/2048
 		if (includeReposts) {
-			const thirtyPosts = feedData.feed.slice(0, 30);
-			feedData.feed = thirtyPosts;
+			const countedPosts = feedData.feed.slice(0, limit);
+			feedData.feed = countedPosts;
 		} else {
 			const justPosts = [];
 			for (let i = 0; i < feedData.feed.length; i++) {
@@ -64,7 +65,7 @@ const getCreateBksyId = async (
 				if (!post.reason) {
 					justPosts.push(post);
 				}
-				if (justPosts.length > 29) {
+				if (justPosts.length > limit - 1) {
 					break;
 				}
 			}
@@ -92,6 +93,7 @@ const getCreateBksyId = async (
 				bskyId,
 				bskyHash,
 				lastUpdated: now,
+				limit,
 			},
 		});
 
