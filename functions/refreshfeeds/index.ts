@@ -42,7 +42,7 @@ const handler: Handler = async () => {
 		const bskyRespPromise = bskyAgent.app.bsky.feed.getAuthorFeed({
 			actor: feedInfo.bskyId,
 			filter: 'posts_no_replies',
-			limit: 30,
+			limit: feedInfo.limit || 30,
 		});
 		bskyPromises.push(bskyRespPromise);
 	}

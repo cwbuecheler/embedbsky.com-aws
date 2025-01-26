@@ -4,6 +4,7 @@ import { APIGatewayProxyEvent } from 'aws-lambda';
 export type BodyCreateFeed = {
 	did: string;
 	includeReposts: string;
+	limit?: number;
 };
 
 export type BodyVerifyLogin = {
@@ -21,6 +22,7 @@ export type FeedInfo = {
 	bskyHash: string;
 	bskyId: string;
 	lastUpdated: number;
+	limit?: number;
 };
 
 export type GenerateFeedHTMLResp = {

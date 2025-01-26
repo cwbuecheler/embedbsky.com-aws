@@ -65,6 +65,7 @@ const handler: Handler = async (event: HTTPAPIEvent) => {
 				}
 			} catch (err: any) {
 				console.error(err);
+				console.error(JSON.stringify(err));
 				const msg = err instanceof OAuthResolverError ? err.message : `Couldn't Initiate Login`;
 				errorMessages.push(msg);
 				statusCode = 500;

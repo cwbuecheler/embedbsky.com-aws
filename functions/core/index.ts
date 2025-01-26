@@ -86,6 +86,7 @@ const handler: Handler = async (event: HTTPAPIEvent) => {
 			if (!evtBody.did) {
 				throw new Error(`No DID was included in the POST request - couldn't verify auth`);
 			}
+			const limit = evtBody.limit ? evtBody.limit : 30;
 
 			// Establish or pick back up the OAuth session & generate a Bsky agent
 			let bskyAgent;
@@ -115,7 +116,14 @@ const handler: Handler = async (event: HTTPAPIEvent) => {
 			}
 
 			try {
-				respData = await getCreateBksyId(bskyId, respData, ddbClient, bskyAgent, includeReposts);
+				respData = await getCreateBksyId(
+					bskyId,
+					respData,
+					ddbClient,
+					bskyAgent,
+					includeReposts,
+					limit,
+				);
 				if (respData.unauth) {
 					statusCode = 403;
 					message = `Sorry, this user has their timeline set to viewable by authenticated users only.`;

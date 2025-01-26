@@ -10,12 +10,13 @@ import { SessionStore, StateStore } from './storage.js';
 export const createClient = async (ddbClient: DynamoDBDocument) => {
 	const publicURI = process.env.PUBLIC_URI;
 	const uri = publicURI || `http://127.0.0.1:3000`;
+	const enc = encodeURIComponent;
 	return new NodeOAuthClient({
 		clientMetadata: {
 			application_type: 'web',
 			client_id: publicURI
 				? `${uri}client-metadata.json`
-				: `http://localhost?redirect_uri=${encodeURIComponent(uri)}`,
+				: `http://localhost?redirect_uri=${enc(uri)}&scope=${enc('atproto transition:generic')}`,
 			client_name: 'Embed Bsky',
 			client_uri: uri,
 			dpop_bound_access_tokens: true,
