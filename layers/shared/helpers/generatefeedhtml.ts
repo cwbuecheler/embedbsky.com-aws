@@ -20,8 +20,9 @@ type BskyImage = {
 const createFeedHeader = (author: any) => {
 	const avatar: string = author?.avatar || null;
 	const userDisplayName: string = author?.displayName || 'unknown';
+	const userDid: string = author?.did || 'unknown';
 	const userHandle: string = author?.handle || 'unknown';
-	const userLink: string = `https://bsky.app/profile/${userHandle}/`;
+	const userLink: string = `https://bsky.app/profile/${userDid}/`;
 	return `<div class="header"><div class="avatar"><a href="${userLink}" target="_blank"><img src="${avatar}" alt="${userDisplayName} avatar" /></a></div><div class="text"><div class="namecontainer"><a class="name" href="${userLink}" target="_blank">${userDisplayName}</a></div><a class="handle" href="${userLink}" target="_blank">@${userHandle}</a></div></div>`;
 };
 
@@ -108,14 +109,15 @@ const createPostBox = (
 	const numReposts: string = post.repostCount > 0 ? post.repostCount.toString() : '';
 	const postUrl: string = getPostUrl(post);
 	const repostDisplayName: string = reason?.by?.displayName || '';
-	const repostHandle: string = reason?.by?.handle || '';
-	const repostLink: string = isRepost ? `https://bsky.app/profile/${repostHandle}/` : '';
+	const repostDid: string = reason?.by?.did || '';
+	const repostLink: string = isRepost ? `https://bsky.app/profile/${repostDid}/` : '';
 	const time: string = post.record?.createdAt
 		? dayjs().to(dayjs(post.record.createdAt))
 		: 'unknown';
 	const userDisplayName: string = post.author?.displayName || 'unknown';
 	const userHandle: string = post.author?.handle || 'unknown';
-	const userLink: string = `https://bsky.app/profile/${userHandle}/`;
+	const userDid: string = post.author?.did || 'unknown';
+	const userLink: string = `https://bsky.app/profile/${userDid}/`;
 
 	// Put together a blob of HTML for the post
 	return `<div class="postcontainer">${isRepost ? `<div class="repostheader"><a href="${repostLink}" target="_blank">${repostSVG}reposted by ${repostDisplayName}</a></div>` : ''}<div class="postbox"><div class="col avatar"><div class="avatar-img"><a href="${userLink}" target="_blank">${avatar ? `<img src="${avatar}" alt="${userHandle}'s user avatar" />` : userAvatarSVG}</a></div></div><div class="col text"><div class="textdata"><strong><a href="${userLink}" target="_blank"><span>${userDisplayName}</span></a></strong> <span class="handle"><a href="${userLink}" target="_blank">@${userHandle}</a></span> &sdot; <span class="timeago"><a href="${postUrl}" target="_blank">${time}</a></span></div><div class="textcopy">${textCopy}</div>${numImages > 0 ? createImageHtml(images, postUrl) : ''}${hasQuotePost ? createQuotePost(post.embed?.record, richText) : ''}${hasLinkCard ? createLinkCard(linkCardData) : ''}<div class="icons"><div class="replies">${replySVG}<span class="num">${numReplies}</span></div><div class="reposts">${repostSVG}<span class="num">${numReposts}</span></div><div class="likes">${likeSVG}<span class="num">${numLikes}</span></div><div class="empty">&nbsp;</div></div></div></div></div>`;
@@ -210,8 +212,8 @@ const getPostUrl = (post: any) => {
 	// split the URI by the forward slash character
 	const splitUri: string[] = post.uri.split('/');
 	const uriId = splitUri[splitUri.length - 1];
-	const userHandle: string = post.author?.handle || 'unknown';
-	return `https://bsky.app/profile/${userHandle}/post/${uriId}`;
+	const userDid: string = post.author?.did || 'unknown';
+	return `https://bsky.app/profile/${userDid}/post/${uriId}`;
 };
 
 const generateFeedHtml = (feedData: any, richText: any): GenerateFeedHTMLResp => {
