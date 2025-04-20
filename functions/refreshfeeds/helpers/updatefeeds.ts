@@ -23,7 +23,8 @@ const updateFeeds = async (
 			// Generate feed flat file
 			const generateFeedHTMLResp = await generateFeedHtml(feedToUpdate, RichText);
 			if (!generateFeedHTMLResp.success) {
-				throw new Error(`Couldn't generate feed HTML`);
+				console.error(`Couldn't generate feed HTML`);
+				continue;
 			}
 
 			// Save it to the CDN
@@ -35,7 +36,8 @@ const updateFeeds = async (
 				AWS_S3_BUCKET_NAME,
 			);
 			if (!cdnResp.success) {
-				throw new Error(`Couldn't save feed data to CDN`);
+				console.error(`Couldn't save feed data to CDN`);
+				continue;
 			}
 		}
 	} catch (err: any) {

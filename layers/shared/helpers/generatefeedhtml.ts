@@ -219,7 +219,21 @@ const generateFeedHtml = (feedData: any, richText: any): GenerateFeedHTMLResp =>
 
 	// We're using the feed items to get some info about the feed owner
 	const firstItem = feed[0];
+
+	// If there's no post or author, just mosey on
+	if (!firstItem) {
+		return {
+			generatedFeedHTML: '',
+			success: true,
+		};
+	}
 	const author = firstItem.reason ? firstItem.reason.by : firstItem.post.author;
+	if (!author) {
+		return {
+			generatedFeedHTML: '',
+			success: false,
+		};
+	}
 
 	// Then we're creating a header with that info
 	let feedHtml = createFeedHeader(author);
