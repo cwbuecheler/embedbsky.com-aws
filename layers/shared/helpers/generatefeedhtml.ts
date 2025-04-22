@@ -67,38 +67,18 @@ const createPostBox = (
 		textCopy = createRichText(textCopy, post.record.facets, richText);
 	}
 
-	// TODO - DRY this
 	// Find images and unbury them
-	let images: BskyImage[] = [];
-	if (post.embed?.images) {
-		images = post.embed.images;
-	} else if (post.embed?.media?.images) {
-		images = post.embed.media.images;
-	} else if (post.embeds) {
-		post.embeds.forEach((embed: any) => {
-			if (embed.images?.length > 0) {
-				images = embed.images;
-			}
-			if (embed.media?.images?.length > 0) {
-				images = embed.media.images;
-			}
-		});
-	}
+	const images: BskyImage[] = extractImages(post);
 
-	// TODO - DRY this
 	// Discover link cards
-	let hasLinkCard = false;
-	let linkCardData: any = undefined;
-	if (post.embed?.external) {
-		hasLinkCard = true;
-		linkCardData = post.embed.external;
-	} else if (post.embeds) {
-		post.embeds.forEach((embed: any) => {
-			if (embed.external) {
-				hasLinkCard = true;
-				linkCardData = embed.external;
-			}
-		});
+	const { hasLinkCard, linkCardData } = extractLinkCard(post);
+
+	// Discover video thumbnail
+	const { hasVideo, thumbnail } = extractVideo(post);
+	if (hasVideo) {
+		console.log('has video');
+		console.log(post);
+		console.log(thumbnail);
 	}
 
 	// Extract the stuff we need to display from the post obj
@@ -120,7 +100,7 @@ const createPostBox = (
 	const userLink: string = `https://bsky.app/profile/${userDid}`;
 
 	// Put together a blob of HTML for the post
-	return `<div class="postcontainer">${isRepost ? `<div class="repostheader"><a href="${repostLink}" target="_blank">${repostSVG}reposted by ${repostDisplayName}</a></div>` : ''}<div class="postbox"><div class="col avatar"><div class="avatar-img"><a href="${userLink}" target="_blank">${avatar ? `<img src="${avatar}" alt="${userHandle}'s user avatar" />` : userAvatarSVG}</a></div></div><div class="col text"><div class="textdata"><strong><a href="${userLink}" target="_blank"><span>${userDisplayName}</span></a></strong> <span class="handle"><a href="${userLink}" target="_blank">@${userHandle}</a></span> &sdot; <span class="timeago"><a href="${postUrl}" target="_blank">${time}</a></span></div><div class="textcopy">${textCopy}</div>${numImages > 0 ? createImageHtml(images, postUrl) : ''}${hasQuotePost ? createQuotePost(post.embed?.record, richText) : ''}${hasLinkCard ? createLinkCard(linkCardData) : ''}<div class="icons"><div class="replies">${replySVG}<span class="num">${numReplies}</span></div><div class="reposts">${repostSVG}<span class="num">${numReposts}</span></div><div class="likes">${likeSVG}<span class="num">${numLikes}</span></div><div class="empty">&nbsp;</div></div></div></div></div>`;
+	return `<div class="postcontainer">${isRepost ? `<div class="repostheader"><a href="${repostLink}" target="_blank">${repostSVG}reposted by ${repostDisplayName}</a></div>` : ''}<div class="postbox"><div class="col avatar"><div class="avatar-img"><a href="${userLink}" target="_blank">${avatar ? `<img src="${avatar}" alt="${userHandle}'s user avatar" />` : userAvatarSVG}</a></div></div><div class="col text"><div class="textdata"><strong><a href="${userLink}" target="_blank"><span>${userDisplayName}</span></a></strong> <span class="handle"><a href="${userLink}" target="_blank">@${userHandle}</a></span> &sdot; <span class="timeago"><a href="${postUrl}" target="_blank">${time}</a></span></div><div class="textcopy">${textCopy}</div>${hasVideo ? createVideoHtml(thumbnail, postUrl) : ''}${numImages > 0 ? createImageHtml(images, postUrl) : ''}${hasQuotePost ? createQuotePost(post.embed?.record, richText) : ''}${hasLinkCard ? createLinkCard(linkCardData) : ''}<div class="icons"><div class="replies">${replySVG}<span class="num">${numReplies}</span></div><div class="reposts">${repostSVG}<span class="num">${numReposts}</span></div><div class="likes">${likeSVG}<span class="num">${numLikes}</span></div><div class="empty">&nbsp;</div></div></div></div></div>`;
 };
 
 const createQuotePost = (record: any, richText: any) => {
@@ -142,36 +122,13 @@ const createQuotePost = (record: any, richText: any) => {
 	}
 
 	// Find images and unbury them
-	let images: BskyImage[] = [];
-	if (record.embed?.images) {
-		images = record.embed.images;
-	} else if (record.embed?.media?.images) {
-		images = record.embed.media.images;
-	} else if (record.embeds) {
-		record.embeds.forEach((embed: any) => {
-			if (embed.images?.length > 0) {
-				images = embed.images;
-			}
-			if (embed.media?.images?.length > 0) {
-				images = embed.media.images;
-			}
-		});
-	}
+	const images: BskyImage[] = extractImages(record);
 
 	// Discover link cards
-	let hasLinkCard = false;
-	let linkCardData: any = undefined;
-	if (record.embed?.external) {
-		hasLinkCard = true;
-		linkCardData = record.embed.external;
-	} else if (record.embeds) {
-		record.embeds.forEach((embed: any) => {
-			if (embed.external) {
-				hasLinkCard = true;
-				linkCardData = embed.external;
-			}
-		});
-	}
+	const { hasLinkCard, linkCardData } = extractLinkCard(record);
+
+	// Discover video thumbnail
+	const { hasVideo, thumbnail } = extractVideo(record);
 
 	// Extract the stuff we need to create a quote post
 	const avatar = record.author?.avatar || '';
@@ -182,7 +139,7 @@ const createQuotePost = (record: any, richText: any) => {
 	const userHandle = record.author?.handle || 'unknown';
 
 	// Create that HTML blob!
-	return `<div class="quotebox"><div class="text"><div class="header"><span class="avatar">${avatar ? `<img src="${avatar}" alt="${userHandle}'s user avatar" />` : userAvatarSVG}</span><span class="othertext"><strong><span>${userDisplayName}</span></strong> <span class="handle">@${userHandle}</span> &sdot; <span class="timeago">${time}</span></span></div><div class="textcopy">${textCopy}</div>${hasLinkCard ? createLinkCard(linkCardData) : ''}${numImages > 0 ? createImageHtml(images, postUrl) : ''}</div></div>`;
+	return `<div class="quotebox"><div class="text"><div class="header"><span class="avatar">${avatar ? `<img src="${avatar}" alt="${userHandle}'s user avatar" />` : userAvatarSVG}</span><span class="othertext"><strong><span>${userDisplayName}</span></strong> <span class="handle">@${userHandle}</span> &sdot; <span class="timeago">${time}</span></span></div><div class="textcopy">${textCopy}</div>${hasVideo ? createVideoHtml(thumbnail, postUrl) : ''}${hasLinkCard ? createLinkCard(linkCardData) : ''}${numImages > 0 ? createImageHtml(images, postUrl) : ''}</div></div>`;
 };
 
 const createRichText = (text: string, facets: any, richText: any): string => {
@@ -202,6 +159,63 @@ const createRichText = (text: string, facets: any, richText: any): string => {
 	}
 
 	return finalText;
+};
+
+// Create video thumbnail HTML
+const createVideoHtml = (thumbnail: string, postUrl: string): string => {
+	if (!thumbnail) {
+		return '';
+	}
+	return `<div class="postimages len-1"><div class="img"><a href="${postUrl}" target="_blank" style="position:relative"><div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; opacity: 50%; position: absolute; top: 0; left: 0; z-index: 10;"><svg fill="#FFFFFF" version="1.1" id="playbutton" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="100px" height="100px" viewBox="0 0 124.512 124.512" xml:space="preserve"><g><path d="M113.956,57.006l-97.4-56.2c-4-2.3-9,0.6-9,5.2v112.5c0,4.6,5,7.5,9,5.2l97.4-56.2 C117.956,65.105,117.956,59.306,113.956,57.006z"/></g></svg></div><img src="${thumbnail}" alt="video thumbnail" /></a></div></div>`;
+};
+
+// Extract images from the post or record
+const extractImages = (postOrRecord: any): BskyImage[] => {
+	if (!postOrRecord) {
+		return [];
+	}
+	let images: BskyImage[] = [];
+	if (postOrRecord.embed?.images) {
+		images = postOrRecord.embed.images;
+	} else if (postOrRecord.embed?.media?.images) {
+		images = postOrRecord.embed.media.images;
+	} else if (postOrRecord.embeds) {
+		postOrRecord.embeds.forEach((embed: any) => {
+			if (embed.images?.length > 0) {
+				images = embed.images;
+			}
+			if (embed.media?.images?.length > 0) {
+				images = embed.media.images;
+			}
+		});
+	}
+	return images;
+};
+
+// Extract link cards from the post or record
+const extractLinkCard = (postOrRecord: any): { hasLinkCard: boolean; linkCardData: any } => {
+	let hasLinkCard = false;
+	let linkCardData: any = undefined;
+	if (postOrRecord.embed?.external) {
+		hasLinkCard = true;
+		linkCardData = postOrRecord.embed.external;
+	} else if (postOrRecord.embeds) {
+		postOrRecord.embeds.forEach((embed: any) => {
+			if (embed.external) {
+				hasLinkCard = true;
+				linkCardData = embed.external;
+			}
+		});
+	}
+	return { hasLinkCard, linkCardData };
+};
+
+// Extract video thumbnail from the post or record
+const extractVideo = (postOrRecord: any): { hasVideo: boolean; thumbnail: string } => {
+	return {
+		hasVideo: postOrRecord.embed?.thumbnail ? true : false,
+		thumbnail: postOrRecord.embed?.thumbnail || '',
+	};
 };
 
 const getPostUrl = (post: any) => {
