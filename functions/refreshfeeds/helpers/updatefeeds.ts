@@ -1,5 +1,4 @@
 // 3rd Party Modules
-import { RichText } from '@atproto/api';
 import { chunkArray, dayjs, generateFeedHtml, saveToCDN } from '/opt/shared.js';
 
 // AWS & Shared Layer
@@ -15,6 +14,7 @@ const CDN_URI = process.env.CDN_URI || '';
 const updateFeeds = async (
 	ddbClient: DynamoDBDocument,
 	feedsToUpdate: { feedInfo: FeedInfo; feed: any }[],
+	RichText: any,
 ) => {
 	let didAllFeedsSucceed = true;
 
