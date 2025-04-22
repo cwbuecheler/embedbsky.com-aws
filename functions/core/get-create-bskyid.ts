@@ -73,6 +73,7 @@ const getCreateBksyId = async (
 		}
 
 		// Generate feed flat file
+		// We have to pass in RichText because if you put it in the shared layer, NPM blows up
 		const generateFeedHTMLResp = await generateFeedHtml(feedData, RichText);
 		if (!generateFeedHTMLResp.success) {
 			throw new Error(`Couldn't generate feed HTML`);

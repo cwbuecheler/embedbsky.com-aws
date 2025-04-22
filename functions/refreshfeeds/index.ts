@@ -1,5 +1,5 @@
 // 3rd Party & Node
-import { AtpAgent } from '@atproto/api';
+import { AtpAgent, RichText } from '@atproto/api';
 
 // AWS and Shared Layer
 import { Handler } from 'aws-lambda';
@@ -81,7 +81,7 @@ const handler: Handler = async () => {
 	}
 
 	// Handle updating feeds first
-	const didAllFeedUpdatesSucceed = await updateFeeds(ddbClient, feedsToUpdate);
+	const didAllFeedUpdatesSucceed = await updateFeeds(ddbClient, feedsToUpdate, RichText);
 	if (!didAllFeedUpdatesSucceed) {
 		console.error(
 			`Error updating feeds - Not all feeds succeeded in updating - see individual errors`,
