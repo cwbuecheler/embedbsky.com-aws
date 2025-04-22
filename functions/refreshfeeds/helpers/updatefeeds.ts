@@ -1,5 +1,4 @@
 // 3rd Party Modules
-import { RichText } from '@atproto/api';
 import { chunkArray, dayjs, generateFeedHtml, saveToCDN } from '/opt/shared.js';
 
 // AWS & Shared Layer
@@ -15,6 +14,7 @@ const CDN_URI = process.env.CDN_URI || '';
 const updateFeeds = async (
 	ddbClient: DynamoDBDocument,
 	feedsToUpdate: { feedInfo: FeedInfo; feed: any }[],
+	RichText: any,
 ) => {
 	let didAllFeedsSucceed = true;
 
@@ -23,7 +23,8 @@ const updateFeeds = async (
 			// Generate feed flat file
 			const generateFeedHTMLResp = await generateFeedHtml(feedToUpdate, RichText);
 			if (!generateFeedHTMLResp.success) {
-				throw new Error(`Couldn't generate feed HTML`);
+				console.error(`Couldn't generate feed HTML`);
+				continue;
 			}
 
 			// Save it to the CDN
@@ -35,7 +36,8 @@ const updateFeeds = async (
 				AWS_S3_BUCKET_NAME,
 			);
 			if (!cdnResp.success) {
-				throw new Error(`Couldn't save feed data to CDN`);
+				console.error(`Couldn't save feed data to CDN`);
+				continue;
 			}
 		}
 	} catch (err: any) {

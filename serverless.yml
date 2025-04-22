@@ -3,7 +3,7 @@ frameworkVersion: '3'
 
 provider:
   name: aws
-  runtime: nodejs18.x
+  runtime: nodejs20.x
   httpApi:
     cors: true
   iam:
@@ -56,6 +56,7 @@ functions:
   refreshfeeds:
     environment: ${file(env.${opt:stage, 'dev'}.json)}
     handler: dist/functions/refreshfeeds/index.handler
+    timeout: 900
     events:
       - schedule: rate(5 minutes)
     layers:
