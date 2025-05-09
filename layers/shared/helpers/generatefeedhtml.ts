@@ -75,11 +75,6 @@ const createPostBox = (
 
 	// Discover video thumbnail
 	const { hasVideo, thumbnail } = extractVideo(post);
-	if (hasVideo) {
-		console.log('has video');
-		console.log(post);
-		console.log(thumbnail);
-	}
 
 	// Extract the stuff we need to display from the post obj
 	const avatar: string = post.author?.avatar || null;

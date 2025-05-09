@@ -21,8 +21,10 @@ export type CDNResp = {
 export type FeedInfo = {
 	bskyHash: string;
 	bskyId: string;
+	isDeleted: number;
 	lastUpdated: number;
 	limit?: number;
+	threwError: number;
 };
 
 export type GenerateFeedHTMLResp = {

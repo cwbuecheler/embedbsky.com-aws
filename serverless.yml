@@ -73,7 +73,7 @@ layers:
     path: dist/layers/shared
     description: Shared functionality for Embed Bsky
     compatibleRuntimes:
-      - nodejs18.x
+      - nodejs20.x
     compatibleArchitectures:
       - x86_64
     retain: false

@@ -1,5 +1,5 @@
 // 3rd Party Modules
-import { chunkArray, dayjs, generateFeedHtml, saveToCDN } from '/opt/shared.js';
+import { chunkArray, dayjs } from '/opt/shared.js';
 
 // AWS & Shared Layer
 import { BatchWriteCommand, DynamoDBDocument } from '@aws-sdk/lib-dynamodb';
@@ -8,45 +8,12 @@ import { BatchWriteCommand, DynamoDBDocument } from '@aws-sdk/lib-dynamodb';
 import { FeedInfo } from 'types/data';
 
 const AWS_BSKY_FEED_TABLE = process.env.AWS_BSKY_FEED_TABLE || '';
-const AWS_S3_BUCKET_NAME = process.env.AWS_S3_BUCKET_NAME || '';
-const CDN_URI = process.env.CDN_URI || '';
 
-const updateFeeds = async (
-	ddbClient: DynamoDBDocument,
-	feedsToUpdate: { feedInfo: FeedInfo; feed: any }[],
-	RichText: any,
-) => {
+const markFeedsErrored = async (ddbClient: DynamoDBDocument, feedsToUpdate: FeedInfo[]) => {
 	let didAllFeedsSucceed = true;
 
-	try {
-		for (const feedToUpdate of feedsToUpdate) {
-			// Generate feed flat file
-			const generateFeedHTMLResp = await generateFeedHtml(feedToUpdate, RichText);
-			if (!generateFeedHTMLResp.success) {
-				console.error(`Couldn't generate feed HTML`);
-				continue;
-			}
-
-			// Save it to the CDN
-			const { generatedFeedHTML } = generateFeedHTMLResp;
-			const cdnResp = await saveToCDN(
-				feedToUpdate.feedInfo.bskyHash,
-				generatedFeedHTML,
-				CDN_URI,
-				AWS_S3_BUCKET_NAME,
-			);
-			if (!cdnResp.success) {
-				console.error(`Couldn't save feed data to CDN`);
-				continue;
-			}
-		}
-	} catch (err: any) {
-		didAllFeedsSucceed = false;
-		console.error(`Error refreshing feeds - CDN save - ${err.message}`);
-	}
-
 	// Generate DB items to overwrite
-	const dbUpdateItems = feedsToUpdate.map((feedToUpdate) => feedToUpdate.feedInfo);
+	const dbUpdateItems = feedsToUpdate.map((feedToUpdate) => feedToUpdate);
 
 	// Break the results into chunks of 25 (max batchwrite amount)
 	const feedInfoChunks = chunkArray(dbUpdateItems, 25);
@@ -58,10 +25,10 @@ const updateFeeds = async (
 		for (const chunk of feedInfoChunks) {
 			// generate put requests for each feedInfo object in the chunk
 			const putRequests = chunk.map((feedInfo) => {
-				const newFeedInfo: FeedInfo = {
+				const newFeedInfo = {
 					...feedInfo,
 					lastUpdated: dayjs().unix(),
-					threwError: 0,
+					threwError: dayjs().unix(),
 					isDeleted: 0,
 				};
 				return { PutRequest: { Item: newFeedInfo } };
@@ -82,7 +49,6 @@ const updateFeeds = async (
 			if (resp.status === 'rejected') {
 				console.error(`Feed update failed - ${resp.reason}`);
 				didAllFeedsSucceed = false;
-				throw new Error(resp.reason);
 			}
 		});
 	} catch (err: any) {
@@ -92,4 +58,4 @@ const updateFeeds = async (
 	return didAllFeedsSucceed;
 };
 
-export default updateFeeds;
+export default markFeedsErrored;

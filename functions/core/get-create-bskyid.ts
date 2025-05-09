@@ -93,8 +93,10 @@ const getCreateBksyId = async (
 			Item: {
 				bskyId,
 				bskyHash,
+				isDeleted: 0,
 				lastUpdated: now,
 				limit,
+				threwError: 0,
 			},
 		});
 
