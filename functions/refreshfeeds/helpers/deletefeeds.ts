@@ -14,7 +14,7 @@ const deleteFeeds = async (feedsWithErrors: FeedInfo[], ddbClient: DynamoDBDocum
 	let didAllFeedsSucceed = true;
 	// Filter to only include feeds where threwError timestamp is > 7 days old
 	const bskyFeedsToDelete = feedsWithErrors.filter(
-		(feed) => feed.threwError > 0 && dayjs().diff(feed.threwError, 'day') > 7,
+		(feed) => feed.threwError > 0 && dayjs().diff(dayjs(feed.threwError), 'day') > 7,
 	);
 
 	// Break the results into chunks of 25 (max batchwrite amount)
