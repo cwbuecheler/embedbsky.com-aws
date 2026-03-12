@@ -21,7 +21,8 @@ const updateFeeds = async (
 	try {
 		for (const feedToUpdate of feedsToUpdate) {
 			// Generate feed flat file
-			const generateFeedHTMLResp = await generateFeedHtml(feedToUpdate, RichText);
+			const enableFooter = feedToUpdate.feedInfo.enableFooter ? true : false;
+			const generateFeedHTMLResp = await generateFeedHtml(feedToUpdate, enableFooter, RichText);
 			if (!generateFeedHTMLResp.success) {
 				console.error(`Couldn't generate feed HTML`);
 				continue;

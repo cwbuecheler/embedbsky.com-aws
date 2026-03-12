@@ -226,7 +226,11 @@ const getPostUrl = (post: any) => {
 };
 
 // We have to pass in RichText because if you put it in the shared layer, NPM blows up
-const generateFeedHtml = (feedData: any, richText: any): GenerateFeedHTMLResp => {
+const generateFeedHtml = (
+	feedData: any,
+	enableFooter: boolean,
+	richText: any,
+): GenerateFeedHTMLResp => {
 	const { feed } = feedData;
 
 	// We're using the feed items to get some info about the feed owner
@@ -258,6 +262,11 @@ const generateFeedHtml = (feedData: any, richText: any): GenerateFeedHTMLResp =>
 		const isRepost = reason ? true : false;
 
 		feedHtml += createPostBox(post, hasQuotePost, isRepost, reason, richText);
+	}
+
+	// Then we're optionally adding the footer
+	if (enableFooter) {
+		feedHtml += `<div class="footer"><a href="https://embedbsky.com" target="_blank">Powered by EmbedBsky</a></div>`;
 	}
 	return {
 		generatedFeedHTML: feedHtml,
