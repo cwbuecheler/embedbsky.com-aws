@@ -91,6 +91,7 @@ const handler: Handler = async (event: HTTPAPIEvent) => {
 			// Establish or pick back up the OAuth session & generate a Bsky agent
 			let bskyAgent;
 			const includeReposts = evtBody.includeReposts ? true : false;
+			const enableFooter = evtBody.enableFooter ? true : false;
 			try {
 				const oauthSession = await oauthClient.restore(evtBody.did);
 				bskyAgent = oauthSession ? new Agent(oauthSession) : null;
@@ -122,6 +123,7 @@ const handler: Handler = async (event: HTTPAPIEvent) => {
 					ddbClient,
 					bskyAgent,
 					includeReposts,
+					enableFooter,
 					limit,
 				);
 				if (respData.unauth) {

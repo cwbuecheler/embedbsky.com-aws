@@ -22,8 +22,9 @@ const getDBPage = async (
 			TableName: tableName,
 			ExpressionAttributeValues: {
 				':fiveMinutesAgo': fiveMinutesAgo,
+				':isDeleted': 1,
 			},
-			FilterExpression: `lastUpdated < :fiveMinutesAgo`,
+			FilterExpression: `lastUpdated < :fiveMinutesAgo AND isDeleted < :isDeleted`,
 		};
 		if (lastEvaluatedKey) {
 			input.ExclusiveStartKey = lastEvaluatedKey;

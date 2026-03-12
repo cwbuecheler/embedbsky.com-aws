@@ -9,6 +9,7 @@ import { DynamoDBDocument } from '@aws-sdk/lib-dynamodb';
 // Local Modules
 import deleteFeeds from './helpers/deletefeeds.js';
 import getDBPage from './helpers/getdbpage.js';
+import markFeedsErrored from './helpers/markFeedErrors.js';
 import updateFeeds from './helpers/updatefeeds.js';
 
 // TS Types
@@ -57,19 +58,19 @@ const handler: Handler = async () => {
 
 	// iterate over all the responses and prepare to update or remove feeds from the DB
 	const feedsToUpdate: { feedInfo: FeedInfo; feed: any }[] = [];
-	const feedsToDelete: string[] = [];
+	const feedsWithErrors: FeedInfo[] = [];
 
 	for (let i = 0; i < bskyResponses.length; i++) {
 		const feedInfo = dbScanResults[i];
 		const resp = bskyResponses[i];
 		// handle rejected promises
 		if (resp.status === 'rejected') {
-			// If it's a not found, add the profile to the list of those to be removed
+			// If it's a not found, add the profile to the list of those that had a not found error
 			if (resp.reason?.error === 'InvalidRequest') {
-				feedsToDelete.push(feedInfo.bskyId);
+				feedsWithErrors.push(feedInfo);
 				continue;
 			} else {
-				// This is an unknown error so we don't want to delete OR update the feed
+				// This is an unknown error so we just want to stay hands off but log it
 				console.error(`Unknown error returned from BlueSky - ${resp.reason?.error}`);
 				continue;
 			}
@@ -88,8 +89,16 @@ const handler: Handler = async () => {
 		);
 	}
 
-	// Now delete any feeds that for users who no longer exist on bsky
-	const didAllFeedDeletesSucceed = await deleteFeeds(feedsToDelete, ddbClient);
+	// Now mark any feeds that errored as errored
+	const didAllFeedErrorsSucceed = await markFeedsErrored(ddbClient, feedsWithErrors);
+	if (!didAllFeedErrorsSucceed) {
+		console.error(
+			`Error marking feeds errored - Not all feeds succeeded in updating - see individual errors`,
+		);
+	}
+
+	// Now delete any feeds that have errors and the threwError timestamp is older than 7 days
+	const didAllFeedDeletesSucceed = await deleteFeeds(feedsWithErrors, ddbClient);
 	if (!didAllFeedDeletesSucceed) {
 		console.error(
 			`Error deleting feeds - Not all feeds succeeded in deleting - see individual errors`,

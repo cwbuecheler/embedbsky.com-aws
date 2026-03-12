@@ -1,5 +1,5 @@
 service: embed-bsky
-frameworkVersion: '3'
+frameworkVersion: '4'
 
 provider:
   name: aws
@@ -25,6 +25,9 @@ functions:
       - httpApi:
           method: POST
           path: /login/verify
+      - httpApi:
+          method: POST
+          path: /login/refresh
     layers:
       - !Ref SharedLambdaLayer
     package:
@@ -73,7 +76,7 @@ layers:
     path: dist/layers/shared
     description: Shared functionality for Embed Bsky
     compatibleRuntimes:
-      - nodejs18.x
+      - nodejs20.x
     compatibleArchitectures:
       - x86_64
     retain: false

@@ -11,7 +11,7 @@ import { DynamoDBDocument } from '@aws-sdk/lib-dynamodb';
 import { createClient } from './session/client.js';
 
 // TS Types
-import { BodyVerifyLogin, HTTPAPIEvent, RespData } from 'types/data';
+import { BodyRefreshLogin, BodyVerifyLogin, HTTPAPIEvent, RespData } from 'types/data';
 
 const dynamoClient = new DynamoDB({});
 const ddbClient = DynamoDBDocument.from(dynamoClient); // client is DynamoDB client
@@ -104,6 +104,31 @@ const handler: Handler = async (event: HTTPAPIEvent) => {
 				console.error(err);
 				errorMessages.push(`Couldn't generate session - ${err.message}`);
 				message = `Couldn't generate session`;
+				statusCode = 500;
+			}
+			break;
+		}
+
+		case 'POST /login/refresh': {
+			const evtBody: BodyRefreshLogin = JSON.parse(event.body || '{}');
+
+			if (!evtBody.did) {
+				errorMessages.push(`Couldn't refresh session - missing did`);
+				message = `Couldn't refresh session`;
+				statusCode = 400;
+				break;
+			}
+
+			try {
+				const session = await oauthClient.restore(evtBody.did);
+				respData = {
+					success: true,
+					did: session.did,
+				};
+			} catch (err: any) {
+				console.error(err);
+				errorMessages.push(`Couldn't refresh session - ${err.message}`);
+				message = `Couldn't refresh session`;
 				statusCode = 500;
 			}
 			break;

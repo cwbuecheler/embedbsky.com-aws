@@ -18,6 +18,7 @@ const getCreateBksyId = async (
 	ddbClient: DynamoDBDocument,
 	bskyAgent: AtpAgent | Agent,
 	includeReposts: boolean,
+	enableFooter: boolean,
 	limit: number,
 ): Promise<RespData> => {
 	try {
@@ -74,7 +75,7 @@ const getCreateBksyId = async (
 
 		// Generate feed flat file
 		// We have to pass in RichText because if you put it in the shared layer, NPM blows up
-		const generateFeedHTMLResp = await generateFeedHtml(feedData, RichText);
+		const generateFeedHTMLResp = await generateFeedHtml(feedData, enableFooter, RichText);
 		if (!generateFeedHTMLResp.success) {
 			throw new Error(`Couldn't generate feed HTML`);
 		}
@@ -93,8 +94,11 @@ const getCreateBksyId = async (
 			Item: {
 				bskyId,
 				bskyHash,
+				enableFooter: enableFooter ? true : false,
+				isDeleted: 0,
 				lastUpdated: now,
 				limit,
+				threwError: 0,
 			},
 		});
 

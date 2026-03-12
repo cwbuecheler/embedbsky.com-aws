@@ -25,8 +25,6 @@ const saveToCDN = async (
 		const data = await s3Client.send(new PutObjectCommand(params));
 		if (data) {
 			savedFeedURI = `${uri}/feeds/${bskyHash}.html`;
-			// change when we get cloudfront working properly
-			// savedFeedURI = `https://embedbsky.com/feeds/${bskyId}.html`;
 		}
 	} catch (err: any) {
 		console.error(err);

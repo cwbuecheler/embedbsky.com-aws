@@ -3,8 +3,13 @@ import { APIGatewayProxyEvent } from 'aws-lambda';
 
 export type BodyCreateFeed = {
 	did: string;
+	enableFooter?: boolean;
 	includeReposts: string;
 	limit?: number;
+};
+
+export type BodyRefreshLogin = {
+	did: string;
 };
 
 export type BodyVerifyLogin = {
@@ -21,8 +26,11 @@ export type CDNResp = {
 export type FeedInfo = {
 	bskyHash: string;
 	bskyId: string;
+	enableFooter?: boolean;
+	isDeleted: number;
 	lastUpdated: number;
 	limit?: number;
+	threwError: number;
 };
 
 export type GenerateFeedHTMLResp = {
