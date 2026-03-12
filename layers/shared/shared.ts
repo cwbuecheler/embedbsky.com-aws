@@ -5,6 +5,7 @@ import updateLocale from 'dayjs/plugin/updateLocale.js';
 
 // helpers
 import generateFeedHtml from './helpers/generatefeedhtml.js';
+import removeFromCDN from './helpers/removefromcdn.js';
 import saveToCDN from './helpers/savetocdn.js';
 
 /* Chunk arrays into N chunks - borrowed from AWS utils */
@@ -45,4 +46,4 @@ const hashString = async (str: string) => {
 	return hashHex;
 };
 
-export { dayjs, generateFeedHtml, hashString, saveToCDN };
+export { dayjs, generateFeedHtml, hashString, removeFromCDN, saveToCDN };
