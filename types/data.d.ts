@@ -27,6 +27,7 @@ export type FeedInfo = {
 	bskyHash: string;
 	bskyId: string;
 	enableFooter?: boolean;
+	includeReposts: boolean;
 	isDeleted: number;
 	lastUpdated: number;
 	limit?: number;

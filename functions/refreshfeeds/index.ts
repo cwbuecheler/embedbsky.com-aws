@@ -43,7 +43,7 @@ const handler: Handler = async () => {
 		const bskyRespPromise = bskyAgent.app.bsky.feed.getAuthorFeed({
 			actor: feedInfo.bskyId,
 			filter: 'posts_no_replies',
-			limit: feedInfo.limit || 30,
+			limit: 90, // Fetch extra so repost filtering has enough posts to work with
 		});
 		bskyPromises.push(bskyRespPromise);
 	}
@@ -75,10 +75,23 @@ const handler: Handler = async () => {
 				continue;
 			}
 		}
-		feedsToUpdate.push({
-			feedInfo,
-			feed: resp?.value?.data?.feed,
-		});
+		const limit = feedInfo.limit || 30;
+		let feed = resp?.value?.data?.feed ?? [];
+		if (feedInfo.includeReposts) {
+			feed = feed.slice(0, limit);
+		} else {
+			const justPosts = [];
+			for (let i = 0; i < feed.length; i++) {
+				if (!feed[i].reason) {
+					justPosts.push(feed[i]);
+				}
+				if (justPosts.length > limit - 1) {
+					break;
+				}
+			}
+			feed = justPosts;
+		}
+		feedsToUpdate.push({ feedInfo, feed });
 	}
 
 	// Handle updating feeds first

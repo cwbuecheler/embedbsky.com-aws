@@ -95,6 +95,7 @@ const getCreateBksyId = async (
 				bskyId,
 				bskyHash,
 				enableFooter: enableFooter ? true : false,
+				includeReposts: includeReposts ? true : false,
 				isDeleted: 0,
 				lastUpdated: now,
 				limit,
